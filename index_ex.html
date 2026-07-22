@@ -157,13 +157,6 @@
             transform: scale(0.98);
         }
 
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.48;
-            transform: none;
-            box-shadow: none;
-        }
-
         .section-title {
             margin: 0 0 14px;
             font-size: 21px;
@@ -562,8 +555,8 @@
                     <div class="result-label">Riconoscimento alimento</div>
                     <div id="risultato-alimento" class="result-value">Alimento: -</div>
 
-                    <button id="food-action-button" class="food-reset-button" onclick="resetAlimento()" disabled>
-                        Prima riconosci l’utente
+                    <button class="food-reset-button" onclick="resetAlimento()">
+                        Riconosci un altro alimento
                     </button>
                 </div>
             </div>
@@ -729,13 +722,11 @@
 
         let utenteBloccato = false;
         let alimentoBloccato = false;
-        let riconoscimentoAlimentoAttivo = false;
 
         const SOGLIA_BLOCCO_UTENTE = 0.90;
         const SOGLIA_BLOCCO_ALIMENTO = 0.60;
-        const SOGLIA_BLOCCO_ALIMENTO_TM = 0.90;
+        const SOGLIA_BLOCCO_ALIMENTO_TM = 0.85;
         const SOGLIA_VISUALIZZAZIONE_ALIMENTO = 0.50;
-        const MARGINE_MINIMO_DA_ALTRO = 0.15;
 
         let ultimoBoxVolto = null;
         let ultimoBoxAlimento = null;
@@ -747,7 +738,7 @@
 
         let candidatoCustom = "";
         let conteggioCandidatoCustom = 0;
-        const FRAME_CONFERMA_CUSTOM = 6;
+        const FRAME_CONFERMA_CUSTOM = 4;
 
         const foodClasses = [
             "banana",
@@ -995,11 +986,8 @@
 
                 foodModel = await cocoSsd.load();
 
-                riconoscimentoAlimentoAttivo = false;
-
                 document.getElementById("risultato-alimento").innerHTML =
-                    "Riconoscimento alimento bloccato" +
-                    "<br><span class='small-text'>Prima fai riconoscere l’utente; poi si attiverà il pulsante per analizzare il cibo.</span>";
+                    "Modelli alimenti caricati. Mostra un alimento alla webcam.";
 
             } catch (error) {
 
@@ -1248,7 +1236,6 @@
 
             let miglioreClasse = "";
             let miglioreProb = 0;
-            let probabilitaAltro = 0;
 
             for (let i = 0; i < prediction.length; i++) {
 
@@ -1256,7 +1243,6 @@
                 const probability = prediction[i].probability;
 
                 if (className === "altro") {
-                    probabilitaAltro = probability;
                     continue;
                 }
 
@@ -1271,11 +1257,7 @@
 
             }
 
-            if (
-                miglioreClasse === "" ||
-                probabilitaAltro >= miglioreProb ||
-                (miglioreProb - probabilitaAltro) < MARGINE_MINIMO_DA_ALTRO
-            ) {
+            if (miglioreClasse === "") {
                 return null;
             }
 
@@ -1429,15 +1411,6 @@
                     "%</span>" +
                     "<br><span class='small-text'>Profilo mantenuto per questa sessione.</span>";
 
-                const foodButton = document.getElementById("food-action-button");
-                if (foodButton) {
-                    foodButton.disabled = false;
-                    foodButton.textContent = "Avvia riconoscimento alimento";
-                }
-
-                document.getElementById("risultato-alimento").innerHTML =
-                    "Utente riconosciuto. Ora puoi avviare il riconoscimento dell’alimento.";
-
             } else {
 
                 document.getElementById("risultato-utente").innerHTML =
@@ -1459,54 +1432,16 @@
             utenteBloccato = false;
             ultimoBoxVolto = null;
 
-            // Se si cambia utente, si azzera e si blocca anche il riconoscimento del cibo.
-            ultimoAlimentoRilevato = "";
-            alimentoBloccato = false;
-            riconoscimentoAlimentoAttivo = false;
-            ultimoBoxAlimento = null;
-            ultimaConfidenzaAlimento = 0;
-            alimentoVisibileTemporaneo = null;
-            tempoUltimoAlimentoVisibile = 0;
-            candidatoCustom = "";
-            conteggioCandidatoCustom = 0;
-
-            const foodButton = document.getElementById("food-action-button");
-            if (foodButton) {
-                foodButton.disabled = true;
-                foodButton.textContent = "Prima riconosci l’utente";
-            }
-
             pulisciOverlay();
 
             document.getElementById("risultato-utente").innerHTML =
                 "Utente sbloccato. Guarda di nuovo la webcam per riconoscere l’utente.";
-
-            document.getElementById("risultato-alimento").innerHTML =
-                "Riconoscimento alimento bloccato" +
-                "<br><span class='small-text'>Prima deve essere riconosciuto un utente.</span>";
 
         }
 
         async function predictFood() {
 
             if (!foodModel || !customFoodModel) {
-                return;
-            }
-
-            // Sicurezza: senza un utente riconosciuto il cibo non viene mai analizzato.
-            if (!utenteBloccato || utenteRiconosciuto === "") {
-                riconoscimentoAlimentoAttivo = false;
-
-                document.getElementById("risultato-alimento").innerHTML =
-                    "Riconoscimento alimento bloccato" +
-                    "<br><span class='small-text'>Prima deve essere riconosciuto un utente.</span>";
-                return;
-            }
-
-            if (!riconoscimentoAlimentoAttivo && !alimentoBloccato) {
-                document.getElementById("risultato-alimento").innerHTML =
-                    "Riconoscimento alimento in pausa" +
-                    "<br><span class='small-text'>Premi “Avvia / riconosci un alimento” e poi mostra il prodotto al centro della webcam.</span>";
                 return;
             }
 
@@ -1640,13 +1575,7 @@
 
                     ultimoAlimentoRilevato = miglioreAlimentoVisibile.className;
                     alimentoBloccato = true;
-                    riconoscimentoAlimentoAttivo = false;
                     ultimoBoxAlimento = miglioreAlimentoVisibile.box;
-
-                    const foodButton = document.getElementById("food-action-button");
-                    if (foodButton) {
-                        foodButton.textContent = "Riconosci un altro alimento";
-                    }
                     ultimaConfidenzaAlimento = miglioreAlimentoVisibile.confidence;
 
                     alimentoVisibileTemporaneo = miglioreAlimentoVisibile;
@@ -1689,15 +1618,6 @@
 
         function resetAlimento() {
 
-            if (!utenteBloccato || utenteRiconosciuto === "") {
-                riconoscimentoAlimentoAttivo = false;
-
-                document.getElementById("risultato-alimento").innerHTML =
-                    "Riconoscimento alimento bloccato" +
-                    "<br><span class='small-text'>Prima deve essere riconosciuto un utente.</span>";
-                return;
-            }
-
             ultimoAlimentoRilevato = "";
             alimentoBloccato = false;
             ultimoBoxAlimento = null;
@@ -1708,15 +1628,9 @@
 
             candidatoCustom = "";
             conteggioCandidatoCustom = 0;
-            riconoscimentoAlimentoAttivo = true;
-
-            const foodButton = document.getElementById("food-action-button");
-            if (foodButton) {
-                foodButton.textContent = "Ricerca alimento in corso...";
-            }
 
             document.getElementById("risultato-alimento").innerHTML =
-                "Riconoscimento avviato. Mostra un alimento al centro della webcam.";
+                "Alimento sbloccato. Mostra un nuovo alimento alla webcam.";
 
         }
 
