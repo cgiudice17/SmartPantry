@@ -164,63 +164,6 @@
             box-shadow: none;
         }
 
-        .system-button.active {
-            background: linear-gradient(135deg, #0f766e, #115e59);
-            cursor: default;
-        }
-
-        .food-guide {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 55%;
-            height: 55%;
-            transform: translate(-50%, -50%);
-            border: 4px dashed #22c55e;
-            border-radius: 22px;
-            z-index: 4;
-            pointer-events: none;
-            display: none;
-            align-items: flex-start;
-            justify-content: center;
-            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.12);
-        }
-
-        .food-guide.active {
-            display: flex;
-        }
-
-        .food-guide span {
-            transform: translateY(-50%);
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: #16a34a;
-            color: white;
-            font-size: 13px;
-            font-weight: bold;
-            box-shadow: 0 8px 18px rgba(22, 163, 74, 0.28);
-        }
-
-        .result-box.database {
-            border-left: 7px solid #7c3aed;
-        }
-
-        .database-result {
-            margin-top: 10px;
-            padding: 13px;
-            border-radius: 15px;
-            background: #f5f3ff;
-            border: 1px solid #ddd6fe;
-            color: #4c1d95;
-            line-height: 1.5;
-        }
-
-        .quick-button:disabled {
-            background: #f1f5f9;
-            color: #94a3b8;
-            border-color: #cbd5e1;
-        }
-
         .section-title {
             margin: 0 0 14px;
             font-size: 21px;
@@ -593,12 +536,9 @@
                     <div class="scan-line"></div>
                     <video id="webcam" autoplay muted playsinline></video>
                     <canvas id="face-overlay" class="face-overlay"></canvas>
-                    <div id="food-guide" class="food-guide">
-                        <span>Mostra qui l’alimento</span>
-                    </div>
                 </div>
 
-                <button id="system-button" class="system-button" onclick="init()">Avvia sistema</button>
+                <button onclick="init()">Avvia sistema</button>
             </div>
 
             <div class="card analysis-panel">
@@ -625,17 +565,6 @@
                     <button id="food-action-button" class="food-reset-button" onclick="resetAlimento()" disabled>
                         Prima riconosci l’utente
                     </button>
-                </div>
-
-                <div class="result-box database">
-                    <div class="result-label">Controllo personalizzato database</div>
-                    <div id="risultato-database" class="result-value">
-                        In attesa di utente e alimento
-                    </div>
-                    <div class="small-text">
-                        Dopo il riconoscimento del prodotto, Smart Pantry verifica automaticamente
-                        la compatibilità con il profilo dell’utente.
-                    </div>
                 </div>
             </div>
 
@@ -691,19 +620,19 @@
                     <div class="quick-section">
                         <div class="quick-title">Alternative</div>
                         <div class="quick-buttons">
-                            <button class="quick-button requires-food" onclick="richiediAlternative()" disabled>Dammi un’alternativa</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Dammene un altra')" disabled>Dammene un’altra</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Mostrami tutte le alternative sicure')" disabled>Alternative sicure</button>
+                            <button class="quick-button" onclick="richiediAlternative()">Dammi un’alternativa</button>
+                            <button class="quick-button" onclick="inviaMessaggioRapido('Dammene un altra')">Dammene un’altra</button>
+                            <button class="quick-button" onclick="inviaMessaggioRapido('Mostrami tutte le alternative sicure')">Alternative sicure</button>
                         </div>
                     </div>
 
                     <div class="quick-section">
                         <div class="quick-title">Controllo alimento</div>
                         <div class="quick-buttons">
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Posso mangiare questo alimento?')" disabled>Posso mangiarlo?</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Che allergeni contiene?')" disabled>Che allergeni contiene?</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('È compatibile con il mio profilo?')" disabled>È compatibile?</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Che alimento è selezionato?')" disabled>Alimento selezionato</button>
+                            <button class="quick-button" onclick="inviaMessaggioRapido('Posso mangiare questo alimento?')">Posso mangiarlo?</button>
+                            <button class="quick-button" onclick="inviaMessaggioRapido('Che allergeni contiene?')">Che allergeni contiene?</button>
+                            <button class="quick-button" onclick="inviaMessaggioRapido('È compatibile con il mio profilo?')">È compatibile?</button>
+                            <button class="quick-button" onclick="inviaMessaggioRapido('Che alimento è selezionato?')">Alimento selezionato</button>
                         </div>
                     </div>
 
@@ -762,7 +691,6 @@
 
         <div class="footer-note">
             Smart Pantry Tutor non sostituisce il controllo reale dell’etichetta: gli allergeni sono stimati in base alla categoria visiva dell’alimento e ai dati presenti nel database.
-            <br><strong>Versione finale: riconoscimento stabile, guida alimento e controllo database automatico</strong>
         </div>
 
     </div>
@@ -804,12 +732,6 @@
         let riconoscimentoAlimentoAttivo = false;
 
         const SOGLIA_BLOCCO_UTENTE = 0.90;
-        const MARGINE_MINIMO_UTENTE = 0.12;
-        const FRAME_CONFERMA_UTENTE = 6;
-
-        let candidatoUtente = "";
-        let conteggioCandidatoUtente = 0;
-
         const SOGLIA_BLOCCO_ALIMENTO = 0.60;
         const SOGLIA_BLOCCO_ALIMENTO_TM = 0.90;
         const SOGLIA_VISUALIZZAZIONE_ALIMENTO = 0.50;
@@ -886,39 +808,6 @@
             return checkbox && checkbox.checked === true;
         }
 
-        function mostraGuidaAlimento(mostra) {
-            const guida = document.getElementById("food-guide");
-            if (guida) {
-                guida.classList.toggle("active", mostra === true);
-            }
-        }
-
-        function aggiornaAzioniContestuali() {
-            const alimentoDisponibile =
-                utenteBloccato &&
-                utenteRiconosciuto !== "" &&
-                alimentoBloccato &&
-                ultimoAlimentoRilevato !== "";
-
-            document.querySelectorAll(".requires-food").forEach(function(button) {
-                button.disabled = !alimentoDisponibile;
-                button.title = alimentoDisponibile
-                    ? ""
-                    : "Prima riconosci utente e alimento";
-            });
-        }
-
-        function impostaPulsanteSistema(testo, disabilitato, attivo = false) {
-            const pulsante = document.getElementById("system-button");
-            if (!pulsante) {
-                return;
-            }
-
-            pulsante.textContent = testo;
-            pulsante.disabled = disabilitato;
-            pulsante.classList.toggle("active", attivo);
-        }
-
         function aggiungiMessaggioChat(testo, tipo) {
             const chat = document.getElementById("chat-messages");
 
@@ -987,7 +876,6 @@
             }
 
             systemStarted = true;
-            impostaPulsanteSistema("Avvio in corso...", true, false);
 
             await preparaTensorFlow();
 
@@ -1045,8 +933,6 @@
                     "Webcam non disponibile.";
 
                 aggiungiMessaggioSistema("Errore webcam: controlla i permessi del browser.");
-                systemStarted = false;
-                impostaPulsanteSistema("Riprova avvio", false, false);
 
                 console.error(error);
 
@@ -1093,8 +979,6 @@
                     "Errore caricamento modello volto o modello utente.";
 
                 aggiungiMessaggioSistema("Errore caricamento modello volto o modello utente.");
-                systemStarted = false;
-                impostaPulsanteSistema("Riprova avvio", false, false);
 
                 console.error(error);
 
@@ -1123,8 +1007,6 @@
                     "Errore caricamento modelli alimenti. Controlla la cartella food_model.";
 
                 aggiungiMessaggioSistema("Errore caricamento modelli alimenti. Controlla la cartella food_model.");
-                systemStarted = false;
-                impostaPulsanteSistema("Riprova avvio", false, false);
 
                 console.error(error);
 
@@ -1132,8 +1014,6 @@
             }
 
             aggiungiMessaggioSistema("Sistema attivo. Ora puoi usare la chat, le domande rapide o il microfono.");
-            impostaPulsanteSistema("✓ Sistema attivo", true, true);
-            aggiornaAzioniContestuali();
 
             predict();
 
@@ -1450,20 +1330,7 @@
 
             await predictUser();
 
-            /*
-                Il modello del cibo non viene neppure eseguito finché:
-                1) non è stato riconosciuto un utente;
-                2) l'utente non ha premuto il pulsante del riconoscimento alimento.
-                Se un alimento è già bloccato, continuiamo solo a mostrarne lo stato.
-            */
-            if (
-                utenteBloccato &&
-                utenteRiconosciuto !== "" &&
-                riconoscimentoAlimentoAttivo &&
-                !alimentoBloccato
-            ) {
-                await predictFood();
-            }
+            await predictFood();
 
             setTimeout(predict, 900);
 
@@ -1495,8 +1362,6 @@
 
             if (!faces || faces.length === 0) {
 
-                candidatoUtente = "";
-                conteggioCandidatoUtente = 0;
                 pulisciOverlay();
 
                 document.getElementById("risultato-utente").innerHTML =
@@ -1545,98 +1410,43 @@
 
             }
 
-            const predictionOrdinate = [...prediction].sort(
-                (a, b) => b.probability - a.probability
-            );
+            if (miglioreProb > SOGLIA_BLOCCO_UTENTE) {
 
-            const secondaProb =
-                predictionOrdinate.length > 1
-                    ? predictionOrdinate[1].probability
-                    : 0;
+                utenteRiconosciuto = miglioreClasse.trim();
+                utenteBloccato = true;
 
-            const margineUtente = miglioreProb - secondaProb;
-
-            if (
-                miglioreProb >= SOGLIA_BLOCCO_UTENTE &&
-                margineUtente >= MARGINE_MINIMO_UTENTE
-            ) {
-
-                if (miglioreClasse === candidatoUtente) {
-                    conteggioCandidatoUtente++;
-                } else {
-                    candidatoUtente = miglioreClasse;
-                    conteggioCandidatoUtente = 1;
-                }
+                disegnaRettangolo(
+                    boxVolto,
+                    utenteRiconosciuto + " " + (miglioreProb * 100).toFixed(1) + "%",
+                    "#2563eb"
+                );
 
                 document.getElementById("risultato-utente").innerHTML =
-                    "Verifica identità in corso: " +
-                    miglioreClasse +
+                    "Utente riconosciuto: " +
+                    utenteRiconosciuto +
                     "<br><span class='small-text'>Confidenza: " +
                     (miglioreProb * 100).toFixed(1) +
-                    "% · conferme " +
-                    conteggioCandidatoUtente +
-                    "/" +
-                    FRAME_CONFERMA_UTENTE +
-                    "</span>";
+                    "%</span>" +
+                    "<br><span class='small-text'>Profilo mantenuto per questa sessione.</span>";
 
-                if (conteggioCandidatoUtente >= FRAME_CONFERMA_UTENTE) {
-
-                    utenteRiconosciuto = miglioreClasse.trim();
-                    utenteBloccato = true;
-
-                    disegnaRettangolo(
-                        boxVolto,
-                        utenteRiconosciuto + " " + (miglioreProb * 100).toFixed(1) + "%",
-                        "#2563eb"
-                    );
-
-                    document.getElementById("risultato-utente").innerHTML =
-                        "Utente riconosciuto: " +
-                        utenteRiconosciuto +
-                        "<br><span class='small-text'>Confidenza al momento del riconoscimento: " +
-                        (miglioreProb * 100).toFixed(1) +
-                        "%</span>" +
-                        "<br><span class='small-text'>Identità confermata su più rilevamenti consecutivi.</span>";
-
-                    riconoscimentoAlimentoAttivo = false;
-                    alimentoBloccato = false;
-                    ultimoAlimentoRilevato = "";
-                    candidatoCustom = "";
-                    conteggioCandidatoCustom = 0;
-                    mostraGuidaAlimento(false);
-
-                    const foodButton = document.getElementById("food-action-button");
-                    if (foodButton) {
-                        foodButton.disabled = false;
-                        foodButton.textContent = "Avvia riconoscimento alimento";
-                    }
-
-                    document.getElementById("risultato-alimento").innerHTML =
-                        "Utente riconosciuto. Il cibo non viene analizzato automaticamente." +
-                        "<br><span class='small-text'>Premi il pulsante quando hai il prodotto davanti alla webcam.</span>";
-
-                    document.getElementById("risultato-database").innerHTML =
-                        "Utente: " +
-                        escapeHTML(utenteRiconosciuto) +
-                        "<br><span class='small-text'>In attesa del riconoscimento dell’alimento.</span>";
-
-                    aggiornaAzioniContestuali();
+                const foodButton = document.getElementById("food-action-button");
+                if (foodButton) {
+                    foodButton.disabled = false;
+                    foodButton.textContent = "Avvia riconoscimento alimento";
                 }
+
+                document.getElementById("risultato-alimento").innerHTML =
+                    "Utente riconosciuto. Ora puoi avviare il riconoscimento dell’alimento.";
 
             } else {
 
-                candidatoUtente = "";
-                conteggioCandidatoUtente = 0;
-
                 document.getElementById("risultato-utente").innerHTML =
-                    "Volto rilevato, ma identità non ancora sufficientemente stabile" +
-                    "<br><span class='small-text'>Servono almeno il 90% e un distacco chiaro dalla seconda classe.</span>" +
+                    "Volto rilevato, ma utente non ancora riconosciuto con sicurezza" +
+                    "<br><span class='small-text'>Aspetto una confidenza superiore al 90%.</span>" +
                     "<br><span class='small-text'>Predizione migliore: " +
                     miglioreClasse +
                     " " +
                     (miglioreProb * 100).toFixed(1) +
-                    "% · margine " +
-                    (margineUtente * 100).toFixed(1) +
                     "%</span>";
 
             }
@@ -1659,9 +1469,6 @@
             tempoUltimoAlimentoVisibile = 0;
             candidatoCustom = "";
             conteggioCandidatoCustom = 0;
-            candidatoUtente = "";
-            conteggioCandidatoUtente = 0;
-            mostraGuidaAlimento(false);
 
             const foodButton = document.getElementById("food-action-button");
             if (foodButton) {
@@ -1677,11 +1484,6 @@
             document.getElementById("risultato-alimento").innerHTML =
                 "Riconoscimento alimento bloccato" +
                 "<br><span class='small-text'>Prima deve essere riconosciuto un utente.</span>";
-
-            document.getElementById("risultato-database").innerHTML =
-                "In attesa di utente e alimento";
-
-            aggiornaAzioniContestuali();
 
         }
 
@@ -1840,13 +1642,15 @@
                     alimentoBloccato = true;
                     riconoscimentoAlimentoAttivo = false;
                     ultimoBoxAlimento = miglioreAlimentoVisibile.box;
-                    ultimaConfidenzaAlimento = miglioreAlimentoVisibile.confidence;
-                    mostraGuidaAlimento(false);
 
                     const foodButton = document.getElementById("food-action-button");
                     if (foodButton) {
                         foodButton.textContent = "Riconosci un altro alimento";
                     }
+                    ultimaConfidenzaAlimento = miglioreAlimentoVisibile.confidence;
+
+                    alimentoVisibileTemporaneo = miglioreAlimentoVisibile;
+                    tempoUltimoAlimentoVisibile = Date.now();
 
                     disegnaRettangolo(
                         miglioreAlimentoVisibile.box,
@@ -1856,19 +1660,17 @@
 
                     document.getElementById("risultato-alimento").innerHTML =
                         "<div class='food-detected'>" +
-                        "Alimento confermato: " +
+                        "Alimento riconosciuto: " +
                         nomeAlimento(miglioreAlimentoVisibile.className) +
-                        "<br><span class='small-text'>Confidenza al momento del riconoscimento: " +
+                        "<br><span class='small-text'>Confidenza: " +
                         (miglioreAlimentoVisibile.confidence * 100).toFixed(1) +
                         "%</span>" +
-                        "<br><span class='small-text'>Risultato memorizzato per questa sessione; il modello visivo è ora in pausa.</span>" +
+                        "<br><span class='small-text'>Alimento mantenuto per questa sessione.</span>" +
                         "<div class='allergen-alert'>" +
                         (allergenInfo[miglioreAlimentoVisibile.className] || "Informazioni allergeni non disponibili.") +
+                        "<br>Il controllo personalizzato viene effettuato dal database quando richiedi alternative." +
                         "</div>" +
                         "</div>";
-
-                    aggiornaAzioniContestuali();
-                    controllaCompatibilitaAutomatica();
 
                     return;
 
@@ -1907,14 +1709,6 @@
             candidatoCustom = "";
             conteggioCandidatoCustom = 0;
             riconoscimentoAlimentoAttivo = true;
-            mostraGuidaAlimento(true);
-
-            document.getElementById("risultato-database").innerHTML =
-                "Utente: " +
-                escapeHTML(utenteRiconosciuto) +
-                "<br><span class='small-text'>In attesa del nuovo alimento.</span>";
-
-            aggiornaAzioniContestuali();
 
             const foodButton = document.getElementById("food-action-button");
             if (foodButton) {
@@ -1923,71 +1717,6 @@
 
             document.getElementById("risultato-alimento").innerHTML =
                 "Riconoscimento avviato. Mostra un alimento al centro della webcam.";
-
-        }
-
-        async function controllaCompatibilitaAutomatica() {
-
-            const pannello = document.getElementById("risultato-database");
-
-            if (
-                !pannello ||
-                utenteRiconosciuto === "" ||
-                ultimoAlimentoRilevato === ""
-            ) {
-                return;
-            }
-
-            pannello.innerHTML =
-                "Controllo in corso..." +
-                "<br><span class='small-text'>Utente: " +
-                escapeHTML(utenteRiconosciuto) +
-                " · alimento: " +
-                escapeHTML(nomeAlimento(ultimoAlimentoRilevato)) +
-                "</span>";
-
-            try {
-
-                const response = await fetch("http://127.0.0.1:5000/chat", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        message: "È compatibile con il mio profilo?",
-                        user: utenteRiconosciuto,
-                        food: ultimoAlimentoRilevato
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error("Risposta backend non valida");
-                }
-
-                const data = await response.json();
-                const risposta = data.reply || "Controllo completato, ma senza risposta testuale.";
-
-                pannello.innerHTML =
-                    "<div class='database-result'>" +
-                    "<strong>Utente:</strong> " +
-                    escapeHTML(utenteRiconosciuto) +
-                    "<br><strong>Alimento:</strong> " +
-                    escapeHTML(nomeAlimento(ultimoAlimentoRilevato)) +
-                    "<br><strong>Esito:</strong> " +
-                    escapeHTML(testoPulito(risposta)) +
-                    "</div>";
-
-            } catch (error) {
-
-                pannello.innerHTML =
-                    "<div class='database-result'>" +
-                    "<strong>Controllo non disponibile.</strong>" +
-                    "<br><span class='small-text'>Avvia app.py sulla porta 5000 e verifica la connessione a MySQL.</span>" +
-                    "</div>";
-
-                console.error("Errore controllo automatico database:", error);
-
-            }
 
         }
 
