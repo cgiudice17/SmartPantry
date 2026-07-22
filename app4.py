@@ -96,21 +96,6 @@ INTENT_ALIASES = {
         "compatibilita",
         "posso mangiarlo",
     },
-    "spiega_compatibilita": {
-        "spiega compatibilita",
-        "motivo compatibilita",
-        "spiegami il motivo",
-    },
-    "dati_controllo": {
-        "dati controllo",
-        "quali dati hai confrontato",
-        "dati del profilo confrontati",
-    },
-    "spiega_alternativa": {
-        "spiega alternativa",
-        "perche questa alternativa",
-        "motivo alternativa",
-    },
     "chiedi_allergeni": {
         "chiedi allergeni",
         "allergeni",
@@ -173,7 +158,6 @@ def nuova_sessione() -> dict[str, Any]:
         "indice_alternativa": 0,
         "ultimo_utente_alternativa": "",
         "ultimo_alimento_alternativa": "",
-        "ultima_alternativa_proposta": "",
         "ultimo_messaggio_utente": "",
         "ultima_risposta": "",
         "history": [],
@@ -417,22 +401,6 @@ def aggiorna_contesto_da_richiesta(
         sessione["alimento"] = alimento
 
 
-def prepara_controllo_profilo(
-    sessione: dict[str, Any],
-) -> tuple[str, str, dict[str, Any] | None, dict[str, Any] | None]:
-    utente_nome, alimento = risolvi_contesto(sessione)
-
-    if not utente_nome or not alimento:
-        return utente_nome, alimento, None, None
-
-    return (
-        utente_nome,
-        alimento,
-        prendi_utente(utente_nome),
-        prendi_prodotto(alimento),
-    )
-
-
 def risposta_compatibilita(
     sessione: dict[str, Any],
     utente_nome: str = "",
@@ -463,87 +431,21 @@ def risposta_compatibilita(
 
     if not allergene_prodotto or not str(allergene_prodotto).strip():
         return (
-            f"Sì: {nome_alimento(alimento)} risulta compatibile con il profilo "
-            f"di {utente['nome']}. Non sono registrati allergeni principali."
+            f"Sì, {utente['nome']}: {nome_alimento(alimento)} non ha allergeni "
+            "principali registrati nel database."
         )
 
     if not rischi:
         return (
-            f"Sì: {nome_alimento(alimento)} risulta compatibile con il profilo "
-            f"di {utente['nome']}. Non ho rilevato incompatibilità dirette."
+            f"Sì, {utente['nome']}: {nome_alimento(alimento)} è compatibile con "
+            f"il tuo profilo. Può contenere {allergene_prodotto}, ma questi elementi "
+            "non risultano tra le tue allergie o intolleranze."
         )
 
     return (
-        f"No: {nome_alimento(alimento)} non risulta compatibile con il profilo "
-        f"di {utente['nome']}. Incompatibilità rilevata: {', '.join(rischi)}."
-    )
-
-
-def risposta_motivo_compatibilita(sessione: dict[str, Any]) -> str:
-    utente_nome, alimento, utente, prodotto = prepara_controllo_profilo(sessione)
-
-    if not utente_nome:
-        return "Prima riconosci l'utente, così posso spiegare il controllo."
-
-    if not alimento:
-        return "Prima seleziona un alimento da controllare."
-
-    if utente is None:
-        return f"Non trovo il profilo di {utente_nome} nel database."
-
-    if prodotto is None:
-        return f"Non trovo {nome_alimento(alimento)} nel database."
-
-    allergeni = testo_in_lista(prodotto.get("allergene"))
-    allergie = testo_in_lista(utente.get("allergia"))
-    intolleranze = testo_in_lista(utente.get("intolleranza"))
-    rischi = controlla_rischio(utente, prodotto)
-
-    allergeni_testo = ", ".join(allergeni) if allergeni else "nessuno registrato"
-    allergie_testo = ", ".join(allergie) if allergie else "nessuna"
-    intolleranze_testo = ", ".join(intolleranze) if intolleranze else "nessuna"
-
-    if rischi:
-        return (
-            f"Il motivo è questo: per {nome_alimento(alimento)} sono registrati "
-            f"gli allergeni {allergeni_testo}; nel profilo di {utente['nome']} "
-            f"risultano allergia {allergie_testo} e intolleranza "
-            f"{intolleranze_testo}. La corrispondenza rilevata riguarda "
-            f"{', '.join(rischi)}."
-        )
-
-    return (
-        f"Il prodotto può contenere {allergeni_testo}, ma nel profilo di "
-        f"{utente['nome']} risultano allergia {allergie_testo} e intolleranza "
-        f"{intolleranze_testo}. Non è stata trovata alcuna corrispondenza diretta."
-    )
-
-
-def risposta_dati_controllo(sessione: dict[str, Any]) -> str:
-    utente_nome, alimento, utente, prodotto = prepara_controllo_profilo(sessione)
-
-    if not utente_nome:
-        return "Prima riconosci l'utente per vedere quali dati vengono confrontati."
-
-    if not alimento:
-        return "Prima seleziona un alimento da controllare."
-
-    if utente is None:
-        return f"Non trovo il profilo di {utente_nome} nel database."
-
-    if prodotto is None:
-        return f"Non trovo {nome_alimento(alimento)} nel database."
-
-    allergeni = testo_in_lista(prodotto.get("allergene"))
-    allergie = testo_in_lista(utente.get("allergia"))
-    intolleranze = testo_in_lista(utente.get("intolleranza"))
-
-    return (
-        f"Ho confrontato gli allergeni registrati per {nome_alimento(alimento)} "
-        f"({', '.join(allergeni) if allergeni else 'nessuno'}) con le allergie "
-        f"({', '.join(allergie) if allergie else 'nessuna'}) e le intolleranze "
-        f"({', '.join(intolleranze) if intolleranze else 'nessuna'}) presenti "
-        f"nel profilo di {utente['nome']}."
+        f"No, {utente['nome']}: {nome_alimento(alimento)} non è compatibile con "
+        f"il tuo profilo. Può contenere {allergene_prodotto}; nel profilo risulta "
+        f"incompatibilità con {', '.join(rischi)}."
     )
 
 
@@ -620,7 +522,6 @@ def risposta_alternativa(
         )
 
     alternativa = alternative[indice]
-    sessione["ultima_alternativa_proposta"] = alternativa
     rischio_testo = ", ".join(rischi)
 
     if indice == 0:
@@ -632,51 +533,6 @@ def risposta_alternativa(
     return (
         f"Un'altra alternativa per {nome_alimento(alimento)} è {alternativa}. "
         "È una possibile opzione da valutare al posto del prodotto originale."
-    )
-
-
-def risposta_motivo_alternativa(sessione: dict[str, Any]) -> str:
-    utente_nome, alimento = risolvi_contesto(sessione)
-    alternativa = str(sessione.get("ultima_alternativa_proposta", "")).strip()
-
-    if not utente_nome:
-        return "Prima riconosci l'utente per ricevere una spiegazione personalizzata."
-
-    if not alimento:
-        return "Prima seleziona un alimento."
-
-    if not alternativa:
-        return (
-            "Prima chiedimi un'alternativa. Dopo la proposta potrò spiegarti "
-            "perché è stata scelta."
-        )
-
-    utente = prendi_utente(utente_nome)
-    prodotto = prendi_prodotto(alimento)
-
-    if utente is None:
-        return f"Non trovo il profilo di {utente_nome} nel database."
-
-    if prodotto is None:
-        return f"Non trovo {nome_alimento(alimento)} nel database."
-
-    allergeni = prodotto.get("allergene")
-    rischi = controlla_rischio(utente, prodotto)
-
-    if rischi:
-        return (
-            f"Ti ho proposto {alternativa} perché {nome_alimento(alimento)} può "
-            f"contenere {allergeni} e nel profilo di {utente['nome']} è stata "
-            f"rilevata incompatibilità con {', '.join(rischi)}. "
-            "L'alternativa è registrata come sostituto nel database; controlla "
-            "comunque la sua etichetta reale."
-        )
-
-    return (
-        f"{alternativa} è registrata come possibile sostituto di "
-        f"{nome_alimento(alimento)}. Nel profilo di {utente['nome']} non risultano "
-        "incompatibilità dirette con il prodotto originale; verifica comunque "
-        "l'etichetta dell'alternativa."
     )
 
 
@@ -875,10 +731,8 @@ def risposta_funzionamento() -> str:
 
 def risposta_moduli() -> str:
     return (
-        "I moduli funzionali sono quattro: riconoscimento utente, riconoscimento "
-        "alimento, controllo personalizzato del profilo e assistente "
-        "conversazionale con chat e voce. MySQL è una tecnologia di supporto "
-        "utilizzata dal controllo, non un modulo autonomo."
+        "I moduli principali sono quattro: riconoscimento utente, riconoscimento "
+        "alimento, database MySQL e assistente conversazionale con chat e voce."
     )
 
 
@@ -1030,31 +884,6 @@ def classifica_intento_locale(testo: str) -> tuple[str, float]:
 
     if any(frase in t for frase in ("ciao", "buongiorno", "buonasera", "alla prossima", "arrivederci", "a presto")):
         return "saluti", 0.97
-
-    if any(frase in t for frase in (
-        "perche questa alternativa",
-        "perche e adatta a me",
-        "motivo dell'alternativa",
-        "spiegami questa alternativa",
-    )):
-        return "spiega_alternativa", 0.99
-
-    if any(frase in t for frase in (
-        "spiegami il motivo della compatibilita",
-        "spiegami il motivo",
-        "perche questo alimento non e compatibile",
-        "perche non e compatibile",
-        "motivo della compatibilita",
-    )):
-        return "spiega_compatibilita", 0.99
-
-    if any(frase in t for frase in (
-        "quali dati del profilo hai confrontato",
-        "quali dati hai confrontato",
-        "cosa hai confrontato",
-        "dati del profilo confrontati",
-    )):
-        return "dati_controllo", 0.99
 
     if any(frase in t for frase in (
         "tutte le alternative",
@@ -1329,15 +1158,6 @@ def esegui_intento(
     if intent == "conversazione":
         return "Sto bene e sono pronto ad aiutarti con Smart Pantry.", True
 
-    if intent == "spiega_alternativa":
-        return risposta_motivo_alternativa(sessione), True
-
-    if intent == "spiega_compatibilita":
-        return risposta_motivo_compatibilita(sessione), True
-
-    if intent == "dati_controllo":
-        return risposta_dati_controllo(sessione), True
-
     if intent == "lista_alternative":
         return risposta_alternative_sicure(sessione), True
 
@@ -1461,31 +1281,20 @@ def chat():
 
     aggiungi_history(sessione, "user", user_message)
 
-    intent_locale, confidence_locale = classifica_intento_locale(user_message)
-    intent_specifici = {
-        "spiega_alternativa",
-        "spiega_compatibilita",
-        "dati_controllo",
-    }
-
     dialogflow_result = rileva_intent_dialogflow(user_message, session_id)
     source = "locale"
     intent = ""
     confidence = 0.0
     fulfillment_text = ""
 
-    if intent_locale in intent_specifici:
-        intent = intent_locale
-        confidence = confidence_locale
-    elif dialogflow_result and not dialogflow_result["is_fallback"]:
+    if dialogflow_result and not dialogflow_result["is_fallback"]:
         intent = dialogflow_result["canonical_intent"]
         confidence = dialogflow_result["confidence"]
         fulfillment_text = dialogflow_result["fulfillment_text"]
         source = "dialogflow"
 
     if not intent:
-        intent = intent_locale
-        confidence = confidence_locale
+        intent, confidence = classifica_intento_locale(user_message)
 
     risposta, understood = esegui_intento(
         intent,

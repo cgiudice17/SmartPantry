@@ -333,6 +333,39 @@
             line-height: 1.5;
         }
 
+        .quick-panel {
+            min-width: 0;
+        }
+
+        .quick-menu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            padding: 0 3px;
+        }
+
+        .quick-menu-header strong {
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        .quick-menu-header span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .new-chat-button {
+            flex: 0 0 auto;
+            margin: 0;
+            padding: 10px 15px;
+            font-family: inherit;
+            font-size: 12px;
+            background: linear-gradient(135deg, #475569, #334155);
+            box-shadow: 0 8px 16px rgba(51, 65, 85, 0.16);
+        }
+
         .assistant-grid {
             display: grid;
             grid-template-columns: 1.1fr 0.9fr;
@@ -381,47 +414,193 @@
         }
 
         .quick-area {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: none;
+            overflow: visible;
+            padding: 0;
         }
 
         .quick-section {
-            padding: 12px;
-            border-radius: 17px;
-            background: #f8fafc;
-            border: 1px solid #dbeafe;
+            position: relative;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #ffffff;
+            transition:
+                border-color 0.18s ease,
+                background 0.18s ease,
+                box-shadow 0.18s ease;
+        }
+
+        .quick-section:hover {
+            border-color: #b8c5d1;
+        }
+
+        .quick-section[open] {
+            border-color: #5eead4;
+            background: #fbfffe;
+            box-shadow: 0 9px 22px rgba(15, 118, 110, 0.09);
         }
 
         .quick-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--blue);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 64px;
+            margin: 0;
+            padding: 12px 48px 12px 19px;
+            list-style: none;
+            cursor: pointer;
+            user-select: none;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .quick-title::-webkit-details-marker {
+            display: none;
+        }
+
+        .quick-title::before {
+            content: "";
+            width: 4px;
+            align-self: stretch;
+            flex: 0 0 4px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            transition: background 0.18s ease;
+        }
+
+        .quick-section[open] .quick-title::before {
+            background: linear-gradient(180deg, var(--teal), var(--blue));
+        }
+
+        .quick-title::after {
+            content: "";
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            width: 9px;
+            height: 9px;
+            border-right: 2px solid #64748b;
+            border-bottom: 2px solid #64748b;
+            transform: translateY(-68%) rotate(45deg);
+            transition:
+                transform 0.18s ease,
+                border-color 0.18s ease;
+        }
+
+        .quick-section[open] .quick-title::after {
+            border-color: var(--teal);
+            transform: translateY(-30%) rotate(225deg);
+        }
+
+        .category-icon,
+        .quick-chevron {
+            display: none;
+        }
+
+        .quick-title-text {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .quick-title-text strong {
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .quick-title-text small {
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: normal;
+            line-height: 1.3;
         }
 
         .quick-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 7px;
+            gap: 8px;
+            padding: 0 19px 15px 35px;
+            animation: quickReveal 0.16s ease;
+        }
+
+        @keyframes quickReveal {
+            from {
+                opacity: 0;
+                transform: translateY(-3px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .quick-button {
+            width: auto;
+            min-height: 36px;
             margin: 0;
-            padding: 8px 11px;
-            font-size: 12px;
+            padding: 8px 12px;
+            border: 1px solid #99f6e4;
             border-radius: 999px;
             background: #ffffff;
             color: var(--teal);
             box-shadow: none;
-            border: 1px solid #99f6e4;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+            transition:
+                transform 0.16s ease,
+                border-color 0.16s ease,
+                background 0.16s ease,
+                box-shadow 0.16s ease;
         }
 
         .quick-button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 8px 16px rgba(20, 184, 166, 0.15);
+            border-color: var(--teal);
+            background: #f0fdfa;
+            box-shadow: 0 6px 13px rgba(15, 118, 110, 0.10);
+        }
+
+        .quick-button:disabled {
+            border-color: #dbe4ee;
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .recovery-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin: -2px 0 12px;
+        }
+
+        .recovery-button {
+            margin: 0;
+            padding: 8px 11px;
+            font-size: 12px;
+            border: 1px solid #fdba74;
+            background: #fff7ed;
+            color: #9a3412;
+            box-shadow: none;
+        }
+
+        .recovery-button:hover {
+            box-shadow: 0 7px 14px rgba(154, 52, 18, 0.12);
         }
 
         .chat-input-row {
@@ -552,7 +731,7 @@
                 font-size: 34px;
             }
 
-            .quick-area {
+            .quick-buttons {
                 grid-template-columns: 1fr;
             }
 
@@ -628,13 +807,12 @@
                 </div>
 
                 <div class="result-box database">
-                    <div class="result-label">Controllo personalizzato database</div>
+                    <div class="result-label">Controllo personalizzato</div>
                     <div id="risultato-database" class="result-value">
-                        In attesa di utente e alimento
+                        In attesa di utente e prodotto
                     </div>
                     <div class="small-text">
-                        Dopo il riconoscimento del prodotto, Smart Pantry verifica automaticamente
-                        la compatibilità con il profilo dell’utente.
+                        La compatibilità viene verificata automaticamente in base ai dati salvati nel profilo utente.
                     </div>
                 </div>
             </div>
@@ -647,10 +825,14 @@
                 <div>
                     <h2 class="section-title">Assistente Smart Pantry</h2>
                     <p>
-                        Usa la chat scritta, scegli una domanda rapida oppure parla con il microfono:
-                        il messaggio viene trascritto e l’assistente risponde anche a voce.
+                        Scrivi liberamente, usa una domanda rapida oppure parla con il microfono.
+                        Se la richiesta non è chiara, puoi ripeterla, riformularla o ascoltare esempi.
                     </p>
                 </div>
+
+                <button class="new-chat-button" onclick="avviaNuovaConversazione()">
+                    Nuova conversazione
+                </button>
             </div>
 
             <div class="assistant-grid">
@@ -686,45 +868,163 @@
                     </div>
                 </div>
 
-                <div class="quick-area">
+                <div class="quick-panel">
 
-                    <div class="quick-section">
-                        <div class="quick-title">Alternative</div>
-                        <div class="quick-buttons">
-                            <button class="quick-button requires-food" onclick="richiediAlternative()" disabled>Dammi un’alternativa</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Dammene un altra')" disabled>Dammene un’altra</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Mostrami tutte le alternative sicure')" disabled>Alternative sicure</button>
-                        </div>
+                    <div class="quick-menu-header">
+                        <strong>Domande rapide</strong>
+                        <span>Scegli un argomento</span>
                     </div>
 
-                    <div class="quick-section">
-                        <div class="quick-title">Controllo alimento</div>
-                        <div class="quick-buttons">
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Posso mangiare questo alimento?')" disabled>Posso mangiarlo?</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Che allergeni contiene?')" disabled>Che allergeni contiene?</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('È compatibile con il mio profilo?')" disabled>È compatibile?</button>
-                            <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Che alimento è selezionato?')" disabled>Alimento selezionato</button>
-                        </div>
-                    </div>
+                    <div id="quick-area" class="quick-area">
 
-                    <div class="quick-section">
-                        <div class="quick-title">Info progetto</div>
-                        <div class="quick-buttons">
-                            <button class="quick-button" onclick="inviaMessaggioRapido('Come funziona il sistema?')">Come funziona?</button>
-                            <button class="quick-button" onclick="inviaMessaggioRapido('Che modello usi per gli alimenti?')">Modelli alimenti</button>
-                            <button class="quick-button" onclick="inviaMessaggioRapido('Che ruolo ha il database?')">Database</button>
-                            <button class="quick-button" onclick="inviaMessaggioRapido('Quali sono i moduli del progetto?')">Moduli</button>
-                        </div>
-                    </div>
+                        <details class="quick-section" open>
+                            <summary class="quick-title">
+                                <span class="category-icon">ALT</span>
+                                <span class="quick-title-text">
+                                    <strong>Alternative</strong>
+                                    <small>Suggerimenti sostitutivi per il prodotto</small>
+                                </span>
+                                <span class="quick-chevron">⌄</span>
+                            </summary>
+                            <div class="quick-buttons">
+                                <button class="quick-button requires-food" onclick="richiediAlternative()" disabled>
+                                    Dammi un’alternativa
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Dammene un’altra')" disabled>
+                                    Dammene un’altra
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Mostrami tutte le alternative sicure')" disabled>
+                                    Mostra tutte le alternative
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Perché questa alternativa è adatta a me?')" disabled>
+                                    Perché questa alternativa?
+                                </button>
+                            </div>
+                        </details>
 
-                    <div class="quick-section">
-                        <div class="quick-title">Saluti</div>
-                        <div class="quick-buttons">
-                            <button class="quick-button" onclick="inviaMessaggioRapido('Ciao')">Ciao</button>
-                            <button class="quick-button" onclick="inviaMessaggioRapido('Grazie')">Grazie</button>
-                            <button class="quick-button" onclick="inviaMessaggioRapido('Alla prossima')">Alla prossima</button>
-                        </div>
+                        <details class="quick-section">
+                            <summary class="quick-title">
+                                <span class="category-icon">OK</span>
+                                <span class="quick-title-text">
+                                    <strong>Compatibilità</strong>
+                                    <small>Verifica rispetto al profilo riconosciuto</small>
+                                </span>
+                                <span class="quick-chevron">⌄</span>
+                            </summary>
+                            <div class="quick-buttons">
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Posso mangiare questo alimento?')" disabled>
+                                    Posso mangiarlo?
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Spiegami il motivo della compatibilità')" disabled>
+                                    Spiegami il motivo
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Quali dati del profilo hai confrontato?')" disabled>
+                                    Quali dati hai confrontato?
+                                </button>
+                            </div>
+                        </details>
+
+                        <details class="quick-section">
+                            <summary class="quick-title">
+                                <span class="category-icon">ALL</span>
+                                <span class="quick-title-text">
+                                    <strong>Allergeni</strong>
+                                    <small>Controllo degli allergeni registrati</small>
+                                </span>
+                                <span class="quick-chevron">⌄</span>
+                            </summary>
+                            <div class="quick-buttons">
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Che allergeni contiene?')" disabled>
+                                    Quali allergeni contiene?
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Contiene glutine?')" disabled>
+                                    Contiene glutine?
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Contiene lattosio?')" disabled>
+                                    Contiene lattosio?
+                                </button>
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Contiene uova?')" disabled>
+                                    Contiene uova?
+                                </button>
+                            </div>
+                        </details>
+
+                        <details class="quick-section">
+                            <summary class="quick-title">
+                                <span class="category-icon">USR</span>
+                                <span class="quick-title-text">
+                                    <strong>Profilo utente</strong>
+                                    <small>Informazioni utilizzate per personalizzare la risposta</small>
+                                </span>
+                                <span class="quick-chevron">⌄</span>
+                            </summary>
+                            <div class="quick-buttons">
+                                <button class="quick-button requires-user" onclick="inviaMessaggioRapido('Quale utente hai riconosciuto?')" disabled>
+                                    Utente riconosciuto
+                                </button>
+                                <button class="quick-button requires-user" onclick="inviaMessaggioRapido('Quali allergie o intolleranze risultano nel mio profilo?')" disabled>
+                                    Le mie incompatibilità
+                                </button>
+                                <button class="quick-button requires-user" onclick="inviaMessaggioRapido('Qual è l’età registrata nel mio profilo?')" disabled>
+                                    Età registrata
+                                </button>
+                                <button class="quick-button requires-user" onclick="inviaMessaggioRapido('Come usi il profilo per personalizzare la risposta?')" disabled>
+                                    Come personalizzi?
+                                </button>
+                            </div>
+                        </details>
+
+                        <details class="quick-section">
+                            <summary class="quick-title">
+                                <span class="category-icon">VIS</span>
+                                <span class="quick-title-text">
+                                    <strong>Riconoscimento attuale</strong>
+                                    <small>Informazioni su utente e alimento rilevati</small>
+                                </span>
+                                <span class="quick-chevron">⌄</span>
+                            </summary>
+                            <div class="quick-buttons">
+                                <button class="quick-button requires-food" onclick="inviaMessaggioRapido('Che alimento è selezionato?')" disabled>
+                                    Alimento selezionato
+                                </button>
+                                <button class="quick-button" onclick="inviaMessaggioRapido('Come funziona il riconoscimento di utenti e alimenti?')">
+                                    Come funziona il riconoscimento?
+                                </button>
+                                <button class="quick-button" onclick="inviaMessaggioRapido('Perché il sistema richiede più rilevamenti consecutivi?')">
+                                    Perché più rilevamenti?
+                                </button>
+                            </div>
+                        </details>
+
+                        <details class="quick-section">
+                            <summary class="quick-title">
+                                <span class="category-icon">INFO</span>
+                                <span class="quick-title-text">
+                                    <strong>Info progetto</strong>
+                                    <small>Funzionamento generale di Smart Pantry</small>
+                                </span>
+                                <span class="quick-chevron">⌄</span>
+                            </summary>
+                            <div class="quick-buttons">
+                                <button class="quick-button" onclick="inviaMessaggioRapido('Spiegami il progetto in breve')">
+                                    Progetto in breve
+                                </button>
+                                <button class="quick-button" onclick="inviaMessaggioRapido('Come funziona il sistema?')">
+                                    Come funziona?
+                                </button>
+                                <button class="quick-button" onclick="inviaMessaggioRapido('Quali sono i moduli del progetto?')">
+                                    Moduli del progetto
+                                </button>
+                                <button class="quick-button" onclick="inviaMessaggioRapido('Quali miglioramenti futuri si potrebbero aggiungere?')">
+                                    Sviluppi futuri
+                                </button>
+                            </div>
+                        </details>
+
                     </div>
+                </div>
+
+                </div>
 
                 </div>
 
@@ -762,7 +1062,7 @@
 
         <div class="footer-note">
             Smart Pantry Tutor non sostituisce il controllo reale dell’etichetta: gli allergeni sono stimati in base alla categoria visiva dell’alimento e ai dati presenti nel database.
-            <br><strong>Versione finale: riconoscimento stabile, guida alimento e controllo database automatico</strong>
+            <br><strong>Chat ibrida: domande rapide, testo libero, voce, sessione separata e recupero automatico</strong>
         </div>
 
     </div>
@@ -786,6 +1086,11 @@
         let maxPredictions;
         let maxCustomFoodPredictions = 0;
         let systemStarted = false;
+
+        let sessioneChatId = creaSessionId();
+        let ultimoMessaggioUtenteChat = "";
+        let ultimaRispostaAssistente = "";
+        let ultimiSuggerimenti = [];
 
         let overlayCanvas;
         let overlayCtx;
@@ -869,6 +1174,77 @@
             return foodDisplayName[alimento] || alimento;
         }
 
+        function creaSessionId() {
+            if (window.crypto && typeof window.crypto.randomUUID === "function") {
+                return window.crypto.randomUUID().replaceAll("-", "_");
+            }
+
+            return (
+                "session_" +
+                Date.now().toString(36) +
+                "_" +
+                Math.random().toString(36).slice(2)
+            );
+        }
+
+        function aggiornaBadgeSessione() {
+            const badge = document.getElementById("session-badge");
+
+            if (badge) {
+                badge.textContent =
+                    "Sessione separata · " +
+                    sessioneChatId.slice(-8) +
+                    " · messaggi non salvati";
+            }
+        }
+
+        function inizializzaMenuRapido() {
+            const categorie =
+                document.querySelectorAll("#quick-area details.quick-section");
+
+            categorie.forEach(function(categoria) {
+                categoria.addEventListener("toggle", function() {
+                    if (!categoria.open) {
+                        return;
+                    }
+
+                    categorie.forEach(function(altraCategoria) {
+                        if (altraCategoria !== categoria) {
+                            altraCategoria.open = false;
+                        }
+                    });
+                });
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            inizializzaMenuRapido();
+            aggiornaBadgeSessione();
+        });
+
+        function filtraDomandeRapide() {
+            const input = document.getElementById("quick-search");
+            const filtro = input ? input.value.trim().toLowerCase() : "";
+
+            document.querySelectorAll("#quick-area .quick-section").forEach(function(section) {
+                let visibili = 0;
+
+                section.querySelectorAll(".quick-button").forEach(function(button) {
+                    const mostra =
+                        filtro === "" ||
+                        button.textContent.toLowerCase().includes(filtro);
+
+                    button.style.display = mostra ? "" : "none";
+
+                    if (mostra) {
+                        visibili++;
+                    }
+                });
+
+                section.style.display = visibili > 0 ? "" : "none";
+            });
+        }
+
         function escapeHTML(testo) {
             const div = document.createElement("div");
             div.textContent = testo;
@@ -894,11 +1270,21 @@
         }
 
         function aggiornaAzioniContestuali() {
-            const alimentoDisponibile =
+            const utenteDisponibile =
                 utenteBloccato &&
-                utenteRiconosciuto !== "" &&
+                utenteRiconosciuto !== "";
+
+            const alimentoDisponibile =
+                utenteDisponibile &&
                 alimentoBloccato &&
                 ultimoAlimentoRilevato !== "";
+
+            document.querySelectorAll(".requires-user").forEach(function(button) {
+                button.disabled = !utenteDisponibile;
+                button.title = utenteDisponibile
+                    ? ""
+                    : "Prima riconosci l’utente";
+            });
 
             document.querySelectorAll(".requires-food").forEach(function(button) {
                 button.disabled = !alimentoDisponibile;
@@ -939,10 +1325,123 @@
 
             chat.appendChild(messaggio);
             chat.scrollTop = chat.scrollHeight;
+
+            return messaggio;
         }
 
         function aggiungiMessaggioSistema(testo) {
             aggiungiMessaggioChat(testo, "bot");
+        }
+
+        function rimuoviMessaggio(elemento) {
+            if (elemento && elemento.parentNode) {
+                elemento.parentNode.removeChild(elemento);
+            }
+        }
+
+        function mostraAzioniRecupero(suggerimenti = []) {
+            const chat = document.getElementById("chat-messages");
+
+            if (!chat) {
+                return;
+            }
+
+            ultimiSuggerimenti = Array.isArray(suggerimenti)
+                ? suggerimenti
+                : [];
+
+            const contenitore = document.createElement("div");
+            contenitore.className = "recovery-actions";
+
+            const azioni = [
+                {
+                    testo: "Ripeti domanda",
+                    funzione: ripetiUltimaDomanda
+                },
+                {
+                    testo: "Parla di nuovo",
+                    funzione: avviaAscolto
+                },
+                {
+                    testo: "Mostra esempi",
+                    funzione: mostraEsempiContestuali
+                }
+            ];
+
+            azioni.forEach(function(azione) {
+                const button = document.createElement("button");
+                button.className = "recovery-button";
+                button.textContent = azione.testo;
+                button.onclick = azione.funzione;
+                contenitore.appendChild(button);
+            });
+
+            chat.appendChild(contenitore);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function ripetiUltimaDomanda() {
+            if (ultimoMessaggioUtenteChat === "") {
+                aggiungiMessaggioSistema("Non c’è ancora una domanda da ripetere.");
+                return;
+            }
+
+            inviaADialogflow(
+                ultimoMessaggioUtenteChat,
+                voceAttiva(),
+                true
+            );
+        }
+
+        function mostraEsempiContestuali() {
+            const esempi =
+                ultimiSuggerimenti.length > 0
+                    ? ultimiSuggerimenti
+                    : [
+                        "Come funziona Smart Pantry?",
+                        "Che ruolo ha il database?",
+                        "Quali sono i moduli del progetto?"
+                    ];
+
+            aggiungiMessaggioSistema(
+                "Puoi provare con: " + esempi.join(" · ")
+            );
+        }
+
+        async function avviaNuovaConversazione(mostraMessaggio = true) {
+            const vecchiaSessione = sessioneChatId;
+
+            try {
+                await fetch("http://127.0.0.1:5000/reset-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        session_id: vecchiaSessione
+                    })
+                });
+            } catch (error) {
+                console.warn("Reset sessione backend non disponibile:", error);
+            }
+
+            sessioneChatId = creaSessionId();
+            ultimoMessaggioUtenteChat = "";
+            ultimaRispostaAssistente = "";
+            ultimiSuggerimenti = [];
+            aggiornaBadgeSessione();
+
+            const chat = document.getElementById("chat-messages");
+
+            if (chat) {
+                chat.innerHTML = "";
+            }
+
+            if (mostraMessaggio) {
+                aggiungiMessaggioSistema(
+                    "Nuova conversazione avviata. Il contesto precedente è stato azzerato."
+                );
+            }
         }
 
         function gestisciInvioChat(event) {
@@ -987,6 +1486,7 @@
             }
 
             systemStarted = true;
+            aggiornaBadgeSessione();
             impostaPulsanteSistema("Avvio in corso...", true, false);
 
             await preparaTensorFlow();
@@ -1682,6 +2182,7 @@
                 "In attesa di utente e alimento";
 
             aggiornaAzioniContestuali();
+            avviaNuovaConversazione(false);
 
         }
 
@@ -1926,6 +2427,61 @@
 
         }
 
+        function formattaRispostaCompatibilita(rispostaOriginale) {
+
+            const risposta = testoPulito(rispostaOriginale || "").trim();
+            const rispostaMinuscola = risposta.toLowerCase();
+
+            let esito = "Verifica completata";
+            let motivo = risposta;
+
+            if (
+                rispostaMinuscola.startsWith("no") ||
+                rispostaMinuscola.includes("non è consigliato") ||
+                rispostaMinuscola.includes("non e consigliato") ||
+                rispostaMinuscola.includes("non compatibile") ||
+                rispostaMinuscola.includes("incompatibilità")
+            ) {
+                esito = "Non compatibile";
+            } else if (
+                rispostaMinuscola.startsWith("sì") ||
+                rispostaMinuscola.startsWith("si") ||
+                rispostaMinuscola.includes("compatibile") ||
+                rispostaMinuscola.includes("nessuna incompatibilità")
+            ) {
+                esito = "Compatibile";
+            }
+
+            const motivoIncompatibilita = risposta.match(
+                /può contenere\s+(.+?)\s+e nel tuo profilo risulta incompatibilità con\s+(.+?)(?:[.!]|$)/i
+            );
+
+            if (motivoIncompatibilita) {
+                motivo =
+                    "Contiene " +
+                    motivoIncompatibilita[1].trim() +
+                    ", indicato tra le incompatibilità del profilo.";
+            } else if (
+                esito === "Compatibile" &&
+                (
+                    rispostaMinuscola.includes("nessuna incompatibilità") ||
+                    rispostaMinuscola.includes("non risultano incompatibilità")
+                )
+            ) {
+                motivo = "Nessuna incompatibilità rilevata nel profilo.";
+            } else {
+                motivo = risposta
+                    .replace(/^(sì|si|no),?\s*[^:]+:\s*/i, "")
+                    .trim();
+            }
+
+            return {
+                esito: esito,
+                motivo: motivo || "Nessun dettaglio disponibile."
+            };
+
+        }
+
         async function controllaCompatibilitaAutomatica() {
 
             const pannello = document.getElementById("risultato-database");
@@ -1965,16 +2521,23 @@
                 }
 
                 const data = await response.json();
-                const risposta = data.reply || "Controllo completato, ma senza risposta testuale.";
+                const risposta =
+                    data.reply ||
+                    "Controllo completato, ma senza risposta testuale.";
+
+                const risultatoCompatibilita =
+                    formattaRispostaCompatibilita(risposta);
 
                 pannello.innerHTML =
                     "<div class='database-result'>" +
                     "<strong>Utente:</strong> " +
                     escapeHTML(utenteRiconosciuto) +
-                    "<br><strong>Alimento:</strong> " +
+                    "<br><strong>Prodotto:</strong> " +
                     escapeHTML(nomeAlimento(ultimoAlimentoRilevato)) +
                     "<br><strong>Esito:</strong> " +
-                    escapeHTML(testoPulito(risposta)) +
+                    escapeHTML(risultatoCompatibilita.esito) +
+                    "<br><strong>Motivo:</strong> " +
+                    escapeHTML(risultatoCompatibilita.motivo) +
                     "</div>";
 
             } catch (error) {
@@ -1991,17 +2554,26 @@
 
         }
 
-        async function inviaADialogflow(testoUtente, rispostaVocale = false, mostraMessaggioUtente = true) {
+        async function inviaADialogflow(
+            testoUtente,
+            rispostaVocale = false,
+            mostraMessaggioUtente = true
+        ) {
 
-            if (testoUtente.trim() === "") {
+            const testo = String(testoUtente || "").trim();
+
+            if (testo === "") {
                 return;
             }
 
+            ultimoMessaggioUtenteChat = testo;
+
             if (mostraMessaggioUtente) {
-                aggiungiMessaggioChat(testoUtente, "user");
+                aggiungiMessaggioChat(testo, "user");
             }
 
-            aggiungiMessaggioChat("Sto elaborando la richiesta...", "bot");
+            const messaggioCaricamento =
+                aggiungiMessaggioChat("Sto elaborando la richiesta...", "bot");
 
             try {
 
@@ -2011,34 +2583,58 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        message: testoUtente,
+                        message: testo,
                         user: utenteRiconosciuto,
-                        food: ultimoAlimentoRilevato
+                        food: ultimoAlimentoRilevato,
+                        session_id: sessioneChatId
                     })
                 });
+
+                rimuoviMessaggio(messaggioCaricamento);
 
                 if (!response.ok) {
                     throw new Error("Errore nella risposta del backend");
                 }
 
                 const data = await response.json();
+                const risposta =
+                    data.reply ||
+                    "Non ho ricevuto una risposta valida.";
 
-                aggiungiMessaggioChat(data.reply, "bot");
+                if (data.session_id) {
+                    sessioneChatId = data.session_id;
+                    aggiornaBadgeSessione();
+                }
+
+                ultimaRispostaAssistente = risposta;
+                aggiungiMessaggioChat(risposta, "bot");
+
+                if (data.understood === false) {
+                    mostraAzioniRecupero(data.suggestions || []);
+                }
 
                 if (rispostaVocale === true) {
                     if (data.audio && data.audio !== "") {
                         riproduciAudio(data.audio);
                     } else {
-                        leggiRisposta(testoPulito(data.reply));
+                        leggiRisposta(testoPulito(risposta));
                     }
                 }
 
             } catch (error) {
 
+                rimuoviMessaggio(messaggioCaricamento);
+
                 aggiungiMessaggioChat(
-                    "Errore: backend non attivo o database non raggiungibile. Avvia app.py sulla porta 5000.",
+                    "Non riesco a contattare l’assistente. Controlla che app.py sia attivo sulla porta 5000.",
                     "bot"
                 );
+
+                mostraAzioniRecupero([
+                    "Riprova la domanda",
+                    "Come funziona Smart Pantry?",
+                    "Che ruolo ha il database?"
+                ]);
 
                 console.error(error);
 
@@ -2101,9 +2697,15 @@
 
                 if (event.error === "no-speech") {
                     aggiungiMessaggioChat(
-                        "Non ho sentito nulla. Clicca di nuovo e parla subito vicino al microfono.",
+                        "Non ho sentito nulla. Puoi parlare di nuovo oppure scrivere la domanda.",
                         "bot"
                     );
+
+                    mostraAzioniRecupero([
+                        "Parla di nuovo",
+                        "Come funziona Smart Pantry?",
+                        "Che ruolo ha il database?"
+                    ]);
                 } else {
                     aggiungiMessaggioChat(
                         "Errore nel riconoscimento vocale: " + event.error,
