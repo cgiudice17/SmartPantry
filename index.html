@@ -968,9 +968,6 @@
                                 <button class="quick-button requires-user" onclick="inviaMessaggioRapido('Qual è l’età registrata nel mio profilo?')" disabled>
                                     Età registrata
                                 </button>
-                                <button class="quick-button requires-user" onclick="inviaMessaggioRapido('Come usi il profilo per personalizzare la risposta?')" disabled>
-                                    Come personalizzi?
-                                </button>
                             </div>
                         </details>
 
@@ -1008,9 +1005,6 @@
                             <div class="quick-buttons">
                                 <button class="quick-button" onclick="inviaMessaggioRapido('Spiegami il progetto in breve')">
                                     Progetto in breve
-                                </button>
-                                <button class="quick-button" onclick="inviaMessaggioRapido('Come funziona il sistema?')">
-                                    Come funziona?
                                 </button>
                                 <button class="quick-button" onclick="inviaMessaggioRapido('Quali sono i moduli del progetto?')">
                                     Moduli del progetto
@@ -1101,6 +1095,7 @@
         let foodCropCanvas;
         let foodCropCtx;
 
+
         let utenteRiconosciuto = "";
         let ultimoAlimentoRilevato = "";
 
@@ -1116,9 +1111,9 @@
         let conteggioCandidatoUtente = 0;
 
         const SOGLIA_BLOCCO_ALIMENTO = 0.60;
-        const SOGLIA_BLOCCO_ALIMENTO_TM = 0.90;
         const SOGLIA_VISUALIZZAZIONE_ALIMENTO = 0.50;
-        const MARGINE_MINIMO_DA_ALTRO = 0.15;
+        const SOGLIA_BLOCCO_ALIMENTO_TM = 0.85;
+        const FRAME_CONFERMA_CUSTOM = 4;
 
         let ultimoBoxVolto = null;
         let ultimoBoxAlimento = null;
@@ -1130,12 +1125,17 @@
 
         let candidatoCustom = "";
         let conteggioCandidatoCustom = 0;
-        const FRAME_CONFERMA_CUSTOM = 6;
 
         const foodClasses = [
             "banana",
+            "apple",
+            "sandwich",
+            "orange",
+            "broccoli",
+            "carrot",
             "hot dog",
             "pizza",
+            "donut",
             "cake"
         ];
 
@@ -1147,9 +1147,15 @@
         ];
 
         const allergenInfo = {
-            "banana": "Nessun allergene principale associato.",
+            "banana": "Nessun allergene principale normalmente associato.",
+            "apple": "Nessun allergene principale normalmente associato.",
+            "sandwich": "Gli allergeni dipendono dagli ingredienti: possibili glutine, lattosio, uova, senape o altri allergeni.",
+            "orange": "Nessun allergene principale normalmente associato.",
+            "broccoli": "Nessun allergene principale normalmente associato.",
+            "carrot": "Nessun allergene principale normalmente associato.",
             "hot dog": "Possibili allergeni: glutine, lattosio, senape.",
             "pizza": "Possibili allergeni: glutine, lattosio.",
+            "donut": "Possibili allergeni: glutine, lattosio, uova.",
             "cake": "Possibili allergeni: glutine, lattosio, uova, frutta a guscio.",
 
             "latte": "Possibili allergeni: lattosio, proteine del latte.",
@@ -1160,8 +1166,14 @@
 
         const foodDisplayName = {
             "banana": "banana",
+            "apple": "mela",
+            "sandwich": "sandwich",
+            "orange": "arancia",
+            "broccoli": "broccoli",
+            "carrot": "carota",
             "hot dog": "hot dog",
             "pizza": "pizza",
+            "donut": "donut",
             "cake": "torta",
 
             "latte": "latte",
@@ -1513,6 +1525,7 @@
             foodCropCanvas.height = 224;
             foodCropCtx = foodCropCanvas.getContext("2d");
 
+
             try {
 
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -1606,7 +1619,10 @@
                 const customFoodModelURL = "./food_model/model.json";
                 const customFoodMetadataURL = "./food_model/metadata.json";
 
-                customFoodModel = await tmImage.load(customFoodModelURL, customFoodMetadataURL);
+                customFoodModel = await tmImage.load(
+                    customFoodModelURL,
+                    customFoodMetadataURL
+                );
                 maxCustomFoodPredictions = customFoodModel.getTotalClasses();
 
                 foodModel = await cocoSsd.load();
@@ -1868,15 +1884,16 @@
 
             let miglioreClasse = "";
             let miglioreProb = 0;
-            let probabilitaAltro = 0;
 
             for (let i = 0; i < prediction.length; i++) {
 
-                const className = prediction[i].className.trim().toLowerCase();
-                const probability = prediction[i].probability;
+                const className =
+                    prediction[i].className.trim().toLowerCase();
+
+                const probability =
+                    prediction[i].probability;
 
                 if (className === "altro") {
-                    probabilitaAltro = probability;
                     continue;
                 }
 
@@ -1891,11 +1908,7 @@
 
             }
 
-            if (
-                miglioreClasse === "" ||
-                probabilitaAltro >= miglioreProb ||
-                (miglioreProb - probabilitaAltro) < MARGINE_MINIMO_DA_ALTRO
-            ) {
+            if (miglioreClasse === "") {
                 return null;
             }
 
@@ -1912,14 +1925,17 @@
 
             /*
                 Regola speciale:
-                spesso il pane lungo viene scambiato da COCO per hot dog.
-                Quindi, SOLO in quel caso, se Teachable Machine vede pane,
+                il pane può essere scambiato da COCO per hot dog o sandwich.
+                In questi due casi, se Teachable Machine vede chiaramente pane,
                 diamo priorità a pane.
             */
             if (
                 alimentoCoco &&
                 alimentoCustom &&
-                alimentoCoco.className === "hot dog" &&
+                (
+                    alimentoCoco.className === "hot dog" ||
+                    alimentoCoco.className === "sandwich"
+                ) &&
                 alimentoCustom.className === "pane" &&
                 alimentoCustom.confidence > 0.75
             ) {
@@ -1962,7 +1978,15 @@
                 riconoscimentoAlimentoAttivo &&
                 !alimentoBloccato
             ) {
-                await predictFood();
+                try {
+                    await predictFood();
+                } catch (error) {
+                    console.error("Errore riconoscimento alimento:", error);
+
+                    document.getElementById("risultato-alimento").innerHTML =
+                        "Errore temporaneo nel riconoscimento alimento." +
+                        "<br><span class='small-text'>Riprovo automaticamente.</span>";
+                }
             }
 
             setTimeout(predict, 900);
@@ -2379,10 +2403,8 @@
 
             document.getElementById("risultato-alimento").innerHTML =
                 "Nessun alimento riconosciuto con sicurezza" +
-                "<br><span class='small-text'>Alimenti riconosciuti dal sistema: pane, uova, latte, yogurt, pizza, torta, hot dog, banana, frutta secca, pesce, crostacei, soia e sesamo.</span>" +
-                "<br><span class='small-text'>Ultimo alimento valido: " +
-                (ultimoAlimentoRilevato !== "" ? nomeAlimento(ultimoAlimentoRilevato) : "-") +
-                "</span>";
+                "<br><span class='small-text'>Alimenti riconosciuti dal sistema: pane, uova, latte, yogurt, banana, mela, arancia, broccoli, carota, sandwich, hot dog, pizza, donut e torta.</span>" +
+                "<br><span class='small-text'>Mantieni il prodotto fermo e completamente nel riquadro centrale.</span>";
 
         }
 

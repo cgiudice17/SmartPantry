@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
 import os
 import re
+import threading
 import time
 import uuid
+from difflib import get_close_matches
 from typing import Any
 
 from flask import Flask, jsonify, request
@@ -17,6 +20,24 @@ try:
     from google.cloud import dialogflow_v2 as dialogflow
 except ImportError:
     dialogflow = None
+
+# Sentence Transformers è opzionale.
+# Se installato, viene usato soltanto quando regole e Dialogflow non comprendono la frase.
+try:
+    from sentence_transformers import SentenceTransformer, util
+except ImportError:
+    SentenceTransformer = None
+    util = None
+
+# OpenAI e HTTPX sono opzionali. Il backend continua a funzionare
+# con Dialogflow/regole locali anche quando la chiave non è configurata.
+try:
+    import httpx
+    from openai import BadRequestError, OpenAI
+except ImportError:
+    httpx = None
+    BadRequestError = Exception
+    OpenAI = None
 
 
 app = Flask(__name__)
@@ -32,6 +53,37 @@ DB_CONFIG = {
 DIALOGFLOW_PROJECT_ID = os.getenv("DIALOGFLOW_PROJECT_ID", "").strip()
 DIALOGFLOW_LANGUAGE_CODE = os.getenv("DIALOGFLOW_LANGUAGE_CODE", "it-IT")
 DIALOGFLOW_ENABLED = bool(dialogflow is not None and DIALOGFLOW_PROJECT_ID)
+
+SEMANTIC_MODEL_NAME = os.getenv(
+    "SMART_PANTRY_SEMANTIC_MODEL",
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+).strip()
+SEMANTIC_THRESHOLD = float(
+    os.getenv("SMART_PANTRY_SEMANTIC_THRESHOLD", "0.56")
+)
+SEMANTIC_MARGIN = float(
+    os.getenv("SMART_PANTRY_SEMANTIC_MARGIN", "0.05")
+)
+SEMANTIC_AVAILABLE = bool(
+    SentenceTransformer is not None and util is not None
+)
+
+MODELLO_SEMANTICO = None
+EMBEDDING_ESEMPI = None
+ETICHETTE_ESEMPI: list[str] = []
+LOCK_MODELLO_SEMANTICO = threading.Lock()
+
+OPENAI_MODEL = os.getenv("SMART_PANTRY_OPENAI_MODEL", "gpt-5-mini").strip()
+OPENAI_API_KEY_PRESENT = bool(os.getenv("OPENAI_API_KEY", "").strip())
+OPENAI_AVAILABLE = bool(
+    OpenAI is not None
+    and httpx is not None
+    and OPENAI_API_KEY_PRESENT
+)
+OPENAI_CLIENT = None
+OPENAI_HTTP_CLIENT = None
+LOCK_OPENAI_CLIENT = threading.Lock()
+OPENAI_MAX_HISTORY_ITEMS = 10
 
 SESSION_TTL_SECONDS = 2 * 60 * 60
 MAX_HISTORY_ITEMS = 30
@@ -165,6 +217,179 @@ INTENT_ALIASES = {
     },
 }
 
+# I pulsanti dell'interfaccia continuano a usare le funzioni Python
+# deterministiche. Le domande scritte liberamente vengono invece affidate
+# a OpenAI, che riceve i dati reali letti da MySQL.
+COMANDI_RAPIDI_ESATTI: dict[str, str] = {
+    # Alternative
+    "richiedi alternative": "richiedi_alternative",
+    "dammi un alternativa": "richiedi_alternative",
+    "dammene un altra": "altra_alternativa",
+    "dammi un altra alternativa": "altra_alternativa",
+    "mostra tutte le alternative": "lista_alternative",
+    "mostrami tutte le alternative sicure": "lista_alternative",
+    "perche questa alternativa": "spiega_alternativa",
+    "perche questa alternativa e adatta a me": "spiega_alternativa",
+
+    # Compatibilità
+    "posso mangiarlo": "controlla_compatibilita",
+    "posso mangiare questo alimento": "controlla_compatibilita",
+    "spiegami il motivo": "spiega_compatibilita",
+    "spiegami il motivo della compatibilita": "spiega_compatibilita",
+    "quali dati hai confrontato": "dati_controllo",
+    "quali dati del profilo hai confrontato": "dati_controllo",
+
+    # Allergeni
+    "quali allergeni contiene": "chiedi_allergeni",
+    "che allergeni contiene": "chiedi_allergeni",
+    "contiene glutine": "contiene_glutine",
+    "contiene lattosio": "contiene_lattosio",
+    "contiene uova": "contiene_uova",
+
+    # Profilo utente
+    "utente riconosciuto": "info_profilo",
+    "quale utente hai riconosciuto": "info_profilo",
+    "le mie incompatibilita": "info_profilo",
+    "quali allergie o intolleranze risultano nel mio profilo": "info_profilo",
+    "eta registrata": "info_profilo",
+    "qual e l eta registrata nel mio profilo": "info_profilo",
+
+    # Riconoscimento attuale
+    "alimento selezionato": "alimento_corrente",
+    "che alimento e selezionato": "alimento_corrente",
+    "come funziona il riconoscimento": "info_modelli",
+    "come funziona il riconoscimento di utenti e alimenti": "info_modelli",
+    "perche piu rilevamenti": "info_modelli",
+    "perche il sistema richiede piu rilevamenti consecutivi": "info_modelli",
+
+    # Informazioni sul progetto
+    "progetto in breve": "info_progetto",
+    "spiegami il progetto in breve": "info_progetto",
+    "moduli del progetto": "moduli",
+    "quali sono i moduli del progetto": "moduli",
+    "sviluppi futuri": "info_progetto",
+    "quali miglioramenti futuri si potrebbero aggiungere": "info_progetto",
+}
+
+INTENT_CONVERSAZIONALI_LOCALI = {
+    "ripeti_risposta",
+    "semplifica_risposta",
+    "riassumi_risposta",
+    "ringraziamento",
+    "saluti",
+    "conversazione",
+}
+
+ESEMPI_INTENT_SEMANTICI: dict[str, list[str]] = {
+    "controlla_compatibilita": [
+        "Questo alimento va bene per me?",
+        "Secondo te questo prodotto potrebbe crearmi problemi?",
+        "Posso consumare il prodotto selezionato?",
+        "È adatto alla persona riconosciuta?",
+        "Questo cibo è compatibile con il mio profilo?",
+        "Dovrei evitare questo alimento?",
+    ],
+    "spiega_compatibilita": [
+        "Per quale motivo posso o non posso mangiarlo?",
+        "Spiegami perché il prodotto è compatibile oppure no",
+        "Come mai questo alimento non va bene per me?",
+        "Perché hai dato questo risultato sulla compatibilità?",
+    ],
+    "dati_controllo": [
+        "Quali informazioni hai confrontato?",
+        "Che dati del prodotto e del profilo hai usato?",
+        "Su quali dati si basa il controllo?",
+        "Cosa hai confrontato per decidere?",
+    ],
+    "richiedi_alternative": [
+        "Cosa posso prendere al posto di questo prodotto?",
+        "Suggeriscimi qualcosa di diverso",
+        "Consigliami un sostituto adatto",
+        "Che cosa potrei mangiare invece?",
+        "Proponimi un prodotto alternativo",
+    ],
+    "altra_alternativa": [
+        "Questa proposta non mi piace, dammene un'altra",
+        "Hai un'altra opzione?",
+        "Suggeriscimi una soluzione diversa dalla precedente",
+        "Passa alla prossima alternativa",
+        "Dammi un'altra alternativa",
+        "Vorrei un'altra proposta",
+        "Fammi vedere un sostituto diverso",
+    ],
+    "lista_alternative": [
+        "Fammi vedere tutte le opzioni disponibili",
+        "Quali sostituti sono presenti?",
+        "Elencami tutte le alternative",
+        "Mostrami tutte le possibilità",
+    ],
+    "spiega_alternativa": [
+        "Perché hai scelto proprio questa alternativa?",
+        "Come mai questa proposta è adatta al mio profilo?",
+        "Spiegami il motivo del sostituto consigliato",
+        "Perché dovrei scegliere questa opzione?",
+    ],
+    "chiedi_allergeni": [
+        "Ci sono sostanze allergeniche in questo prodotto?",
+        "Quali allergeni sono presenti?",
+        "Questo alimento contiene ingredienti problematici?",
+        "Dimmi gli allergeni del prodotto selezionato",
+        "A cosa potrei essere allergico in questo alimento?",
+    ],
+    "info_profilo": [
+        "Quali informazioni ci sono nel mio profilo?",
+        "Che allergie e intolleranze risultano?",
+        "Chi è la persona riconosciuta?",
+        "Dimmi i dati dell'utente attivo",
+        "Qual è l'età registrata?",
+    ],
+    "alimento_corrente": [
+        "Che prodotto hai riconosciuto?",
+        "Quale alimento è attualmente selezionato?",
+        "Cosa vede la webcam in questo momento?",
+        "Che cibo è stato rilevato?",
+    ],
+    "info_modelli": [
+        "Come avviene il riconoscimento visivo?",
+        "Quali modelli di intelligenza artificiale usate?",
+        "Come riconoscete il volto e il cibo?",
+        "Perché servono più rilevamenti consecutivi?",
+        "Il riconoscimento viene eseguito nel browser?",
+    ],
+    "info_progetto": [
+        "Spiegami in breve Smart Pantry",
+        "A cosa serve questo progetto?",
+        "Qual è l'obiettivo dell'applicazione?",
+        "Che cosa fa Smart Pantry Tutor?",
+        "Quali sviluppi futuri sono possibili?",
+    ],
+    "moduli": [
+        "Quali sono i moduli del progetto?",
+        "Da quali parti è composto il sistema?",
+        "Quali componenti funzionali avete sviluppato?",
+        "Come è organizzato il progetto?",
+    ],
+    "funzionamento": [
+        "Descrivimi il flusso completo del sistema",
+        "Che cosa succede dal riconoscimento alla risposta?",
+        "Come lavora l'applicazione passo dopo passo?",
+        "Qual è il funzionamento generale?",
+    ],
+    "info_database": [
+        "Che ruolo svolge MySQL?",
+        "Dove sono memorizzati profili e prodotti?",
+        "Come comunica Flask con il database?",
+        "Da dove vengono prese le alternative?",
+    ],
+    "limiti_privacy": [
+        "Le immagini della webcam vengono salvate?",
+        "Quali sono i limiti del riconoscimento?",
+        "Il sistema può sbagliare?",
+        "Come viene protetta la privacy?",
+        "Posso fidarmi senza controllare l'etichetta?",
+    ],
+}
+
 
 def nuova_sessione() -> dict[str, Any]:
     return {
@@ -175,6 +400,7 @@ def nuova_sessione() -> dict[str, Any]:
         "ultimo_alimento_alternativa": "",
         "ultima_alternativa_proposta": "",
         "ultimo_messaggio_utente": "",
+        "ultimo_intent": "",
         "ultima_risposta": "",
         "history": [],
         "updated_at": time.time(),
@@ -224,6 +450,468 @@ def get_connection():
     return mysql.connector.connect(**DB_CONFIG)
 
 
+def prendi_tutti_prodotti() -> list[dict[str, Any]]:
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("SELECT * FROM prodotti ORDER BY nome")
+        return list(cursor.fetchall() or [])
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def valore_booleano(valore: Any) -> bool:
+    if isinstance(valore, bool):
+        return valore
+
+    if valore is None:
+        return False
+
+    return str(valore).strip().lower() in {
+        "1",
+        "true",
+        "si",
+        "sì",
+        "yes",
+    }
+
+
+def valori_reali_profilo(valore: Any) -> list[str]:
+    valori = testo_in_lista(valore)
+    assenti = {"", "nessuna", "nessuno", "no", "non presente"}
+    return [elemento for elemento in valori if elemento not in assenti]
+
+
+def motivi_incompatibilita_estesi(
+    utente: dict[str, Any],
+    prodotto: dict[str, Any],
+) -> list[str]:
+    motivi = list(controlla_rischio(utente, prodotto))
+
+    try:
+        eta = int(utente.get("eta") or 0)
+    except (TypeError, ValueError):
+        eta = 0
+
+    if eta and eta < 18 and valore_booleano(prodotto.get("alcool")):
+        motivi.append("prodotto alcolico non adatto a un minorenne")
+
+    return sorted(set(motivi))
+
+
+def confronta_valori_profilo(
+    valori_profilo: list[str],
+    allergeni_prodotto: list[str],
+) -> list[str]:
+    corrispondenze: list[str] = []
+
+    for valore in valori_profilo:
+        for allergene in allergeni_prodotto:
+            if valore in allergene or allergene in valore:
+                corrispondenze.append(valore)
+
+    return sorted(set(corrispondenze))
+
+
+def dettaglio_verifica_personalizzata(
+    utente: dict[str, Any],
+    prodotto: dict[str, Any],
+) -> dict[str, Any]:
+    allergie = valori_reali_profilo(utente.get("allergia"))
+    intolleranze = valori_reali_profilo(utente.get("intolleranza"))
+    allergeni = testo_in_lista(prodotto.get("allergene"))
+
+    allergie_corrispondenti = confronta_valori_profilo(allergie, allergeni)
+    intolleranze_corrispondenti = confronta_valori_profilo(
+        intolleranze,
+        allergeni,
+    )
+
+    try:
+        eta = int(utente.get("eta") or 0)
+    except (TypeError, ValueError):
+        eta = 0
+
+    blocco_eta = bool(
+        eta
+        and eta < 18
+        and valore_booleano(prodotto.get("alcool"))
+    )
+
+    motivi: list[str] = []
+
+    for valore in allergie_corrispondenti:
+        motivi.append(f"allergia registrata a {valore}")
+
+    for valore in intolleranze_corrispondenti:
+        motivi.append(f"intolleranza registrata a {valore}")
+
+    if blocco_eta:
+        motivi.append("prodotto alcolico non adatto a un minorenne")
+
+    return {
+        "esito": "incompatibile" if motivi else "compatibile",
+        "allergie_corrispondenti": allergie_corrispondenti,
+        "intolleranze_corrispondenti": intolleranze_corrispondenti,
+        "blocco_eta": blocco_eta,
+        "motivi_specifici": motivi,
+    }
+
+
+def serializza_utente_ai(utente: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not utente:
+        return None
+
+    return {
+        "nome": str(utente.get("nome") or ""),
+        "eta": utente.get("eta"),
+        "allergie": valori_reali_profilo(utente.get("allergia")),
+        "intolleranze": valori_reali_profilo(utente.get("intolleranza")),
+    }
+
+
+def serializza_prodotto_ai(
+    prodotto: dict[str, Any],
+    utente: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    nome_db = str(prodotto.get("nome") or "").strip()
+    dati = {
+        "nome": nome_alimento(nome_db),
+        "nome_database": nome_db,
+        "categoria": str(prodotto.get("categoria") or "").strip(),
+        "allergeni": testo_in_lista(prodotto.get("allergene")),
+        "alcool": valore_booleano(prodotto.get("alcool")),
+        "alternative_registrate": prendi_alternative(prodotto),
+    }
+
+    if utente:
+        verifica = dettaglio_verifica_personalizzata(utente, prodotto)
+        motivi = motivi_incompatibilita_estesi(utente, prodotto)
+
+        dati["compatibile_con_utente"] = verifica["esito"] == "compatibile"
+        dati["motivi_incompatibilita"] = motivi
+        dati["verifica_personalizzata"] = verifica
+
+    return dati
+
+
+def costruisci_contesto_openai(
+    sessione: dict[str, Any],
+    domanda: str = "",
+) -> dict[str, Any]:
+    utente_nome = str(sessione.get("utente", "")).strip()
+    alimento_corrente = str(sessione.get("alimento", "")).strip()
+
+    utente = prendi_utente(utente_nome) if utente_nome else None
+    prodotti = prendi_tutti_prodotti()
+
+    prodotti_serializzati = [
+        serializza_prodotto_ai(prodotto, utente)
+        for prodotto in prodotti
+    ]
+
+    prodotto_corrente = None
+    alimento_menzionato = trova_alimento(domanda)
+    prodotto_menzionato = None
+
+    for prodotto in prodotti:
+        nome_prodotto = str(prodotto.get("nome") or "").strip()
+
+        if nome_prodotto.lower() == alimento_corrente.lower():
+            prodotto_corrente = serializza_prodotto_ai(prodotto, utente)
+
+        if alimento_menzionato and nome_prodotto.lower() == alimento_menzionato.lower():
+            prodotto_menzionato = serializza_prodotto_ai(prodotto, utente)
+
+    incompatibili = [
+        {
+            "nome": prodotto["nome"],
+            "motivi": prodotto.get(
+                "verifica_personalizzata",
+                {},
+            ).get("motivi_specifici", []),
+            "allergeni": prodotto.get("allergeni", []),
+            "alternative_registrate": prodotto.get(
+                "alternative_registrate",
+                [],
+            ),
+        }
+        for prodotto in prodotti_serializzati
+        if prodotto.get("compatibile_con_utente") is False
+    ]
+
+    compatibili = [
+        prodotto["nome"]
+        for prodotto in prodotti_serializzati
+        if prodotto.get("compatibile_con_utente") is True
+    ]
+
+    history = list(sessione.get("history", []))
+    # Il messaggio corrente è già presente nella history: non lo duplichiamo.
+    history_precedente = history[:-1][-OPENAI_MAX_HISTORY_ITEMS:]
+
+    return {
+        "utente_attivo": serializza_utente_ai(utente),
+        "alimento_corrente": nome_alimento(alimento_corrente) if alimento_corrente else None,
+        "dettagli_alimento_corrente": prodotto_corrente,
+        "alimento_menzionato_nella_domanda": (
+            nome_alimento(alimento_menzionato) if alimento_menzionato else None
+        ),
+        "dettagli_alimento_menzionato": prodotto_menzionato,
+        "regola_di_priorita": (
+            "Se la domanda nomina un alimento, usa prima "
+            "dettagli_alimento_menzionato. Altrimenti usa "
+            "dettagli_alimento_corrente."
+        ),
+        "ultima_alternativa_proposta": (
+            str(sessione.get("ultima_alternativa_proposta", "")).strip() or None
+        ),
+        "prodotti_incompatibili_con_utente": incompatibili,
+        "prodotti_compatibili_con_utente": compatibili,
+        "prodotti_registrati": prodotti_serializzati,
+        "conversazione_precedente": history_precedente,
+        "informazioni_progetto": {
+            "nome": "Smart Pantry Tutor",
+            "scopo": (
+                "Riconoscere utente e alimento e fornire risposte personalizzate "
+                "attraverso l'assistente conversazionale."
+            ),
+            "moduli_funzionali": [
+                "riconoscimento utente",
+                "riconoscimento alimento",
+                "assistente conversazionale con chat e voce",
+            ],
+            "tecnologie": [
+                "Flask",
+                "MySQL",
+                "BlazeFace",
+                "Teachable Machine",
+                "COCO-SSD",
+                "TensorFlow.js",
+                "Dialogflow",
+                "OpenAI API",
+            ],
+            "privacy": (
+                "Le immagini sono elaborate nel browser e non vengono salvate "
+                "dal backend durante l'uso normale."
+            ),
+            "limiti": (
+                "Il riconoscimento e il database sono dimostrativi. "
+                "L'etichetta reale deve sempre essere controllata."
+            ),
+        },
+    }
+
+
+ISTRUZIONI_OPENAI = """
+Sei l'assistente conversazionale di Smart Pantry Tutor.
+Rispondi in italiano in modo semplice, breve, chiaro e diretto.
+
+AMBITO
+Puoi parlare soltanto di:
+- profilo dell'utente riconosciuto;
+- alimenti e bevande;
+- allergeni, allergie, intolleranze e compatibilità;
+- alternative alimentari;
+- funzionamento, tecnologie, privacy e limiti di Smart Pantry.
+
+STILE OBBLIGATORIO
+1. Rispondi normalmente in 1 o 2 frasi.
+2. Usa al massimo 3 frasi quando serve una precisazione importante.
+3. Non ripetere informazioni già dette nella conversazione.
+4. Non usare introduzioni come “stai chiedendo”, “alimento controllato”,
+   “dati confrontati” o “esito finale”.
+5. Non scrivere risposte da rapporto tecnico.
+6. Quando ci sono più prodotti, usa un elenco breve.
+
+DATI DEL PROGETTO
+1. I moduli funzionali di Smart Pantry sono tre:
+   - riconoscimento utente;
+   - riconoscimento alimento;
+   - assistente conversazionale con chat e voce.
+2. Il controllo personalizzato del profilo non è un modulo autonomo.
+3. MySQL è una tecnologia di supporto.
+4. Per spiegare il riconoscimento, dì semplicemente che i modelli lavorano
+   nel browser e il backend riceve i dati necessari per consultare MySQL.
+   Non inserire esempi tra parentesi se non vengono richiesti.
+
+REGOLE SUGLI ALIMENTI
+1. Per i prodotti presenti nel CONTENUTO SMART PANTRY, usa sempre i dati del
+   database come fonte principale.
+2. Se un alimento comune non è presente nel database, puoi usare la tua
+   conoscenza generale per indicare gli allergeni tipicamente presenti.
+3. In questo caso devi essere prudente:
+   - usa formule come “in genere”, “di solito” o “può contenere”;
+   - ricorda che ricetta, marca e preparazione possono cambiare;
+   - per prodotti confezionati o preparati invita a controllare l'etichetta.
+4. Confronta gli allergeni tipici dell'alimento con allergie e intolleranze
+   presenti nel profilo dell'utente.
+5. Non dire automaticamente che un alimento è sicuro quando la composizione
+   può variare.
+6. Non inventare una composizione precisa, una marca o un'etichetta.
+7. Per esempio, a una domanda su un panino con salame puoi valutare pane e
+   salame in base agli allergeni comuni, precisando che alcuni prodotti
+   industriali possono contenere derivati del latte o tracce.
+
+REGOLE MEDICHE
+1. Non prevedere sintomi personali e non formulare diagnosi.
+2. Quando l'utente chiede conseguenze o sintomi, rispondi brevemente e
+   aggiungi il consiglio medico solo se pertinente.
+3. Puoi dire: “Smart Pantry non può prevedere i sintomi. Se lo hai già
+   consumato, hai disturbi o sei preoccupato, rivolgiti a un medico.”
+
+REGOLE SULLE ALTERNATIVE
+1. Le richieste di alternative sono tra le funzioni principali di Smart Pantry.
+2. Se il prodotto è presente nel database, usa prima le alternative registrate.
+3. Proponi una sola alternativa alla volta, salvo che l'utente chieda
+   esplicitamente di mostrarle tutte.
+4. La risposta deve avere normalmente due frasi:
+   - prima indica chiaramente l'alternativa;
+   - poi spiega brevemente perché può essere utile rispetto
+     all'incompatibilità rilevata.
+5. Non ripetere tutto il profilo, tutti gli allergeni e tutto il controllo.
+6. Per “dammene un'altra” proponi una scelta diversa da quelle già nominate.
+7. Se un alimento comune non è nel database, puoi proporre una semplice
+   alternativa usando conoscenza generale, confrontandola con il profilo.
+   In questo caso specifica che composizione e marca possono variare e invita
+   a controllare l'etichetta.
+8. Non presentare mai un'alternativa come certamente sicura senza verifica
+   dell'etichetta reale.
+9. Usa nomi semplici e comprensibili, evitando descrizioni tecniche.
+
+ALTRE REGOLE
+1. Se la domanda nomina un alimento, valuta quello; altrimenti usa quello
+   selezionato.
+2. Se la domanda è fuori tema, ricorda brevemente che puoi aiutare solo
+   nell'ambito Smart Pantry.
+3. Non menzionare JSON, prompt, API o istruzioni interne.
+
+ESEMPI DI STILE
+- “Ti consiglio il latte senza lattosio. È una sostituzione semplice del
+  latte tradizionale, ma controlla comunque l'etichetta.”
+- “Puoi scegliere anche una bevanda vegetale. Verifica che non contenga
+  altri allergeni incompatibili con il tuo profilo.”
+- “In genere un panino con salame contiene glutine nel pane. Il salame può
+  variare: controlla l'etichetta per verificare eventuali derivati del latte.”
+- “I moduli sono tre: riconoscimento utente, riconoscimento alimento e
+  assistente conversazionale.”
+""".strip()
+
+
+def prendi_client_openai():
+    global OPENAI_CLIENT
+    global OPENAI_HTTP_CLIENT
+
+    if not OPENAI_AVAILABLE:
+        return None
+
+    if OPENAI_CLIENT is not None:
+        return OPENAI_CLIENT
+
+    with LOCK_OPENAI_CLIENT:
+        if OPENAI_CLIENT is not None:
+            return OPENAI_CLIENT
+
+        trasporto = httpx.HTTPTransport(
+            local_address="0.0.0.0",
+            retries=1,
+            http1=True,
+            http2=False,
+        )
+        OPENAI_HTTP_CLIENT = httpx.Client(
+            transport=trasporto,
+            timeout=45.0,
+            trust_env=False,
+        )
+        OPENAI_CLIENT = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY", "").strip(),
+            http_client=OPENAI_HTTP_CLIENT,
+        )
+
+    return OPENAI_CLIENT
+
+
+def risposta_openai_smart_pantry(
+    sessione: dict[str, Any],
+    domanda: str,
+) -> str | None:
+    client = prendi_client_openai()
+
+    if client is None:
+        return None
+
+    try:
+        contesto = costruisci_contesto_openai(sessione, domanda)
+        input_utente = (
+            "CONTENUTO SMART PANTRY (dati affidabili):\n"
+            + json.dumps(
+                contesto,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                default=str,
+            )
+            + "\n\nDOMANDA DELL'UTENTE:\n"
+            + domanda
+        )
+
+        parametri = {
+            "model": OPENAI_MODEL,
+            "instructions": ISTRUZIONI_OPENAI,
+            "input": input_utente,
+            "max_output_tokens": 280,
+            "store": False,
+        }
+
+        try:
+            risposta = client.responses.create(
+                **parametri,
+                reasoning={"effort": "minimal"},
+            )
+        except BadRequestError:
+            # Compatibilità con eventuali modelli che non accettano
+            # l'opzione reasoning.
+            risposta = client.responses.create(**parametri)
+
+        testo = str(risposta.output_text or "").strip()
+
+        if not testo:
+            return None
+
+        return testo[:1100]
+    except Exception as error:
+        # Se OpenAI non è raggiungibile, il backend usa automaticamente
+        # Dialogflow, regole locali e classificatore semantico.
+        app.logger.warning("OpenAI non disponibile: %s", error)
+        return None
+
+
+def normalizza_comando_rapido(testo: str) -> str:
+    testo_norm = normalizza_testo(testo)
+    testo_norm = testo_norm.replace("'", " ")
+    testo_norm = re.sub(r"[^a-z0-9 ]+", " ", testo_norm)
+    testo_norm = re.sub(r"\s+", " ", testo_norm)
+    return testo_norm.strip()
+
+
+def intent_locale_prioritario(testo: str) -> tuple[str, float]:
+    testo_norm = normalizza_comando_rapido(testo)
+
+    if testo_norm in COMANDI_RAPIDI_ESATTI:
+        return COMANDI_RAPIDI_ESATTI[testo_norm], 1.0
+
+    if testo_norm.startswith("richiedi alternative per "):
+        return "richiedi_alternative", 1.0
+
+    intent_locale, confidence_locale = classifica_intento_locale(testo)
+
+    if intent_locale in INTENT_CONVERSAZIONALI_LOCALI:
+        return intent_locale, confidence_locale
+
+    return "", 0.0
+
+
 def database_disponibile() -> tuple[bool, str]:
     try:
         conn = get_connection()
@@ -268,7 +956,44 @@ def normalizza_testo(testo: Any) -> str:
     testo = testo.replace("torta", "cake")
     testo = re.sub(r"\buovo\b", "uova", testo)
 
-    return testo
+    # Corregge piccoli refusi soltanto nelle parole principali del progetto.
+    parole_dominio = {
+        "alternativa",
+        "alternative",
+        "allergene",
+        "allergeni",
+        "allergia",
+        "allergie",
+        "compatibile",
+        "compatibilita",
+        "intolleranza",
+        "intolleranze",
+        "profilo",
+        "alimento",
+        "prodotto",
+        "riconoscimento",
+        "progetto",
+    }
+
+    parole_corrette: list[str] = []
+
+    for parola in testo.split():
+        parola_pulita = re.sub(r"[^a-z0-9']", "", parola)
+
+        if len(parola_pulita) >= 6 and parola_pulita not in parole_dominio:
+            vicine = get_close_matches(
+                parola_pulita,
+                parole_dominio,
+                n=1,
+                cutoff=0.78,
+            )
+
+            if vicine:
+                parola = parola.replace(parola_pulita, vicine[0])
+
+        parole_corrette.append(parola)
+
+    return " ".join(parole_corrette)
 
 
 def trova_utente(testo: str) -> str:
@@ -547,6 +1272,26 @@ def risposta_dati_controllo(sessione: dict[str, Any]) -> str:
     )
 
 
+def formatta_alternativa(alternativa: str) -> str:
+    """Rende leggibile il testo proveniente dal database."""
+    testo = re.sub(r"\s+", " ", str(alternativa or "")).strip(" .,-")
+
+    if not testo:
+        return ""
+
+    return testo[0].upper() + testo[1:]
+
+
+def descrivi_rischi_alternativa(rischi: list[str]) -> str:
+    if not rischi:
+        return "l'incompatibilità rilevata"
+
+    if len(rischi) == 1:
+        return f"l'incompatibilità al {rischi[0]}"
+
+    return "le incompatibilità a " + ", ".join(rischi)
+
+
 def risposta_alternativa(
     sessione: dict[str, Any],
     continua: bool = False,
@@ -554,13 +1299,10 @@ def risposta_alternativa(
     utente_nome, alimento = risolvi_contesto(sessione)
 
     if not utente_nome:
-        return "Prima riconosci l'utente, così posso personalizzare l'alternativa."
+        return "Prima riconosci l'utente, così posso scegliere un'alternativa adatta."
 
     if not alimento:
-        return (
-            "Prima seleziona un alimento con la webcam. Poi posso suggerire "
-            "un'alternativa adatta al profilo."
-        )
+        return "Prima seleziona l'alimento che vuoi sostituire."
 
     utente = prendi_utente(utente_nome)
     prodotto = prendi_prodotto(alimento)
@@ -570,30 +1312,24 @@ def risposta_alternativa(
 
     if prodotto is None:
         return (
-            f"Non trovo {nome_alimento(alimento)} nel database. Aggiungilo alla "
-            "tabella prodotti per gestire allergeni e alternative."
+            f"Non trovo {nome_alimento(alimento)} nel database. "
+            "Puoi comunque chiedermi un'alternativa scrivendo il nome completo del prodotto."
         )
 
-    allergene_prodotto = prodotto.get("allergene")
     alternative = prendi_alternative(prodotto)
     rischi = controlla_rischio(utente, prodotto)
 
-    if not allergene_prodotto or not str(allergene_prodotto).strip():
-        return (
-            f"{utente['nome']}, {nome_alimento(alimento)} non ha allergeni "
-            "principali registrati: non serve un'alternativa specifica."
-        )
-
     if not rischi:
         return (
-            f"{utente['nome']}, {nome_alimento(alimento)} non risulta incompatibile "
-            "con il tuo profilo. Puoi comunque controllare l'etichetta reale."
+            f"{nome_alimento(alimento)} non risulta incompatibile con il tuo profilo. "
+            "Posso comunque proporti un sostituto, ma non è necessario per motivi di compatibilità."
         )
 
     if not alternative:
         return (
-            f"{utente['nome']}, {nome_alimento(alimento)} può contenere "
-            f"{allergene_prodotto}, ma nel database non sono presenti alternative."
+            f"Non ci sono alternative registrate per {nome_alimento(alimento)}. "
+            "Controlla l'etichetta e scegli un prodotto che non contenga "
+            f"{', '.join(rischi)}."
         )
 
     stessa_richiesta = (
@@ -615,41 +1351,43 @@ def risposta_alternativa(
     if indice >= len(alternative):
         sessione["indice_alternativa"] = len(alternative) - 1
         return (
-            f"Non ho altre alternative registrate per {nome_alimento(alimento)}. "
-            f"Quelle disponibili sono: {', '.join(alternative)}."
+            "Non ci sono altre alternative registrate per questo prodotto. "
+            "Puoi scegliere una delle proposte precedenti, controllando sempre l'etichetta."
         )
 
-    alternativa = alternative[indice]
+    alternativa = formatta_alternativa(alternative[indice])
     sessione["ultima_alternativa_proposta"] = alternativa
-    rischio_testo = ", ".join(rischi)
+
+    motivo = descrivi_rischi_alternativa(rischi)
 
     if indice == 0:
         return (
-            f"{utente['nome']}, per {nome_alimento(alimento)} ho rilevato un rischio "
-            f"legato a {rischio_testo}. L'alternativa consigliata è {alternativa}."
+            f"Ti consiglio: {alternativa}. "
+            f"È una sostituzione più adatta perché il prodotto originale presenta {motivo}; "
+            "controlla comunque l'etichetta prima del consumo."
         )
 
     return (
-        f"Un'altra alternativa per {nome_alimento(alimento)} è {alternativa}. "
-        "È una possibile opzione da valutare al posto del prodotto originale."
+        f"Puoi scegliere anche: {alternativa}. "
+        f"È un'altra soluzione per evitare {motivo}; verifica comunque gli ingredienti."
     )
+
 
 
 def risposta_motivo_alternativa(sessione: dict[str, Any]) -> str:
     utente_nome, alimento = risolvi_contesto(sessione)
-    alternativa = str(sessione.get("ultima_alternativa_proposta", "")).strip()
+    alternativa = formatta_alternativa(
+        sessione.get("ultima_alternativa_proposta", "")
+    )
 
     if not utente_nome:
-        return "Prima riconosci l'utente per ricevere una spiegazione personalizzata."
+        return "Prima riconosci l'utente."
 
     if not alimento:
         return "Prima seleziona un alimento."
 
     if not alternativa:
-        return (
-            "Prima chiedimi un'alternativa. Dopo la proposta potrò spiegarti "
-            "perché è stata scelta."
-        )
+        return "Prima chiedimi un'alternativa."
 
     utente = prendi_utente(utente_nome)
     prodotto = prendi_prodotto(alimento)
@@ -660,34 +1398,25 @@ def risposta_motivo_alternativa(sessione: dict[str, Any]) -> str:
     if prodotto is None:
         return f"Non trovo {nome_alimento(alimento)} nel database."
 
-    allergeni = prodotto.get("allergene")
     rischi = controlla_rischio(utente, prodotto)
-
-    if rischi:
-        return (
-            f"Ti ho proposto {alternativa} perché {nome_alimento(alimento)} può "
-            f"contenere {allergeni} e nel profilo di {utente['nome']} è stata "
-            f"rilevata incompatibilità con {', '.join(rischi)}. "
-            "L'alternativa è registrata come sostituto nel database; controlla "
-            "comunque la sua etichetta reale."
-        )
+    motivo = descrivi_rischi_alternativa(rischi)
 
     return (
-        f"{alternativa} è registrata come possibile sostituto di "
-        f"{nome_alimento(alimento)}. Nel profilo di {utente['nome']} non risultano "
-        "incompatibilità dirette con il prodotto originale; verifica comunque "
-        "l'etichetta dell'alternativa."
+        f"Ti ho proposto {alternativa} perché sostituisce "
+        f"{nome_alimento(alimento)}, che presenta {motivo}. "
+        "È comunque importante controllare l'etichetta del prodotto scelto."
     )
+
 
 
 def risposta_alternative_sicure(sessione: dict[str, Any]) -> str:
     utente_nome, alimento = risolvi_contesto(sessione)
 
     if not utente_nome:
-        return "Prima riconosci l'utente per vedere alternative personalizzate."
+        return "Prima riconosci l'utente."
 
     if not alimento:
-        return "Prima seleziona un alimento con la webcam."
+        return "Prima seleziona l'alimento che vuoi sostituire."
 
     utente = prendi_utente(utente_nome)
     prodotto = prendi_prodotto(alimento)
@@ -698,24 +1427,36 @@ def risposta_alternative_sicure(sessione: dict[str, Any]) -> str:
     if prodotto is None:
         return f"Non trovo {nome_alimento(alimento)} nel database."
 
-    alternative = prendi_alternative(prodotto)
+    alternative = [
+        formatta_alternativa(valore)
+        for valore in prendi_alternative(prodotto)
+        if formatta_alternativa(valore)
+    ]
+    rischi = controlla_rischio(utente, prodotto)
 
     if not alternative:
-        return f"Per {nome_alimento(alimento)} non ho alternative registrate."
+        return (
+            f"Non ci sono alternative registrate per {nome_alimento(alimento)}. "
+            "Scegli un prodotto senza gli allergeni incompatibili indicati nel tuo profilo."
+        )
 
-    rischi = controlla_rischio(utente, prodotto)
-    elenco = "; ".join(alternative)
+    elenco = "; ".join(
+        f"{indice}. {alternativa}"
+        for indice, alternativa in enumerate(alternative, start=1)
+    )
 
     if rischi:
         return (
-            f"Per {utente['nome']}, {nome_alimento(alimento)} presenta un rischio "
-            f"legato a {', '.join(rischi)}. Le alternative disponibili sono: {elenco}."
+            f"Per sostituire {nome_alimento(alimento)} puoi scegliere: {elenco}. "
+            f"Sono proposte pensate per evitare {descrivi_rischi_alternativa(rischi)}; "
+            "controlla sempre l'etichetta."
         )
 
     return (
-        f"{nome_alimento(alimento)} è compatibile con il profilo di {utente['nome']}. "
-        f"Nel database sono comunque presenti queste alternative: {elenco}."
+        f"Le alternative registrate per {nome_alimento(alimento)} sono: {elenco}. "
+        "Scegli quella più adatta alle tue preferenze e verifica gli ingredienti."
     )
+
 
 
 def risposta_allergeni(
@@ -838,6 +1579,30 @@ def risposta_utente(sessione: dict[str, Any], testo: str) -> str:
     )
 
 
+def risposta_personalizzazione(sessione: dict[str, Any]) -> str:
+    utente_nome, _ = risolvi_contesto(sessione)
+
+    if not utente_nome:
+        return (
+            "Prima riconosci l'utente, così posso spiegare "
+            "come personalizzo la risposta."
+        )
+
+    utente = prendi_utente(utente_nome)
+
+    if utente is None:
+        return f"Non trovo il profilo di {utente_nome} nel database."
+
+    return (
+        f"Uso le allergie e le intolleranze registrate nel profilo di "
+        f"{utente['nome']} e le confronto con gli allergeni dell'alimento. "
+        "L'età viene considerata soltanto quando il prodotto richiede un "
+        "controllo specifico, per esempio nel caso delle bevande alcoliche. "
+        "Se rilevo un'incompatibilità, ne spiego il motivo e propongo "
+        "alternative adatte; altrimenti segnalo che il prodotto risulta compatibile."
+    )
+
+
 def risposta_alimento_corrente(sessione: dict[str, Any]) -> str:
     alimento = sessione.get("alimento", "")
 
@@ -875,10 +1640,10 @@ def risposta_funzionamento() -> str:
 
 def risposta_moduli() -> str:
     return (
-        "I moduli funzionali sono quattro: riconoscimento utente, riconoscimento "
-        "alimento, controllo personalizzato del profilo e assistente "
-        "conversazionale con chat e voce. MySQL è una tecnologia di supporto "
-        "utilizzata dal controllo, non un modulo autonomo."
+        "I moduli funzionali sono tre: riconoscimento utente, riconoscimento "
+        "alimento e assistente conversazionale con chat e voce. "
+        "Il controllo personalizzato e MySQL sono componenti di supporto, "
+        "non moduli autonomi."
     )
 
 
@@ -924,8 +1689,8 @@ def risposta_modelli(testo: str) -> str:
         )
 
     return (
-        "Smart Pantry usa BlazeFace per localizzare il volto, Teachable Machine "
-        "per le classi personalizzate e COCO-SSD per diversi alimenti comuni."
+        "Smart Pantry riconosce il volto e gli alimenti direttamente nel browser. "
+        "Il backend riceve solo i dati necessari per consultare MySQL e rispondere."
     )
 
 
@@ -993,6 +1758,68 @@ def risposta_privacy_limiti(testo: str) -> str:
     )
 
 
+def risposta_spiega_meglio(sessione: dict[str, Any]) -> str:
+    ultimo_intent = sessione.get("ultimo_intent", "")
+    ultimo_messaggio = sessione.get("ultimo_messaggio_utente", "")
+    ultima_risposta = sessione.get("ultima_risposta", "")
+
+    if not ultima_risposta:
+        return (
+            "Non ho ancora una risposta precedente da approfondire. "
+            "Fammi prima una domanda su Smart Pantry."
+        )
+
+    if ultimo_intent in {
+        "controlla_compatibilita",
+        "spiega_compatibilita",
+        "dati_controllo",
+    }:
+        return risposta_motivo_compatibilita(sessione)
+
+    if ultimo_intent in {
+        "richiedi_alternative",
+        "altra_alternativa",
+        "lista_alternative",
+        "spiega_alternativa",
+    } and sessione.get("ultima_alternativa_proposta"):
+        return risposta_motivo_alternativa(sessione)
+
+    if ultimo_intent == "info_progetto":
+        return (
+            "Smart Pantry Tutor è un assistente che unisce riconoscimento visivo "
+            "e dati personali. Prima identifica l'utente e l'alimento, poi consulta "
+            "il profilo e le informazioni presenti in MySQL. Infine comunica se il "
+            "prodotto risulta compatibile e, quando necessario, propone alternative."
+        )
+
+    if ultimo_intent == "funzionamento":
+        return (
+            "In pratica il sistema lavora in quattro passaggi: riconosce l'utente, "
+            "riconosce l'alimento, confronta allergeni e profilo nel database e "
+            "restituisce una risposta personalizzata attraverso la chat."
+        )
+
+    if ultimo_intent == "moduli":
+        return risposta_moduli()
+
+    if ultimo_intent == "info_modelli":
+        return risposta_modelli(ultimo_messaggio)
+
+    if ultimo_intent == "info_database":
+        return risposta_database(ultimo_messaggio)
+
+    if ultimo_intent == "info_profilo":
+        return risposta_utente(sessione, ultimo_messaggio)
+
+    if ultimo_intent == "alimento_corrente":
+        return risposta_alimento_corrente(sessione)
+
+    return (
+        "Certo, te lo riformulo in modo più chiaro: "
+        + risposta_semplice(ultima_risposta)
+    )
+
+
 def risposta_semplice(ultima_risposta: str) -> str:
     if not ultima_risposta:
         return "Non ho ancora una risposta precedente da semplificare."
@@ -1018,6 +1845,16 @@ def classifica_intento_locale(testo: str) -> tuple[str, float]:
 
     if any(frase in t for frase in ("ripeti la risposta", "puoi ripetere", "non ho sentito", "ripeti")):
         return "ripeti_risposta", 0.96
+
+    if any(frase in t for frase in (
+        "spiega meglio",
+        "spiegami meglio",
+        "puoi spiegare meglio",
+        "chiarisci meglio",
+        "non ho capito bene",
+        "approfondisci",
+    )):
+        return "spiega_meglio", 0.99
 
     if any(frase in t for frase in ("piu semplice", "spiegalo semplice", "semplifica")):
         return "semplifica_risposta", 0.94
@@ -1121,6 +1958,14 @@ def classifica_intento_locale(testo: str) -> tuple[str, float]:
         return "alimento_corrente", 0.97
 
     if any(frase in t for frase in (
+        "come usi il profilo",
+        "come personalizzi",
+        "personalizzare la risposta",
+        "personalizzi i miei consigli",
+    )):
+        return "spiega_personalizzazione", 0.99
+
+    if any(frase in t for frase in (
         "quale utente",
         "chi sono",
         "mi riconosci",
@@ -1200,6 +2045,156 @@ def classifica_intento_locale(testo: str) -> tuple[str, float]:
 
     if "come stai" in t:
         return "conversazione", 0.90
+
+    return "fallback", 0.0
+
+
+def carica_modello_semantico() -> bool:
+    global MODELLO_SEMANTICO
+    global EMBEDDING_ESEMPI
+    global ETICHETTE_ESEMPI
+
+    if not SEMANTIC_AVAILABLE:
+        return False
+
+    if MODELLO_SEMANTICO is not None and EMBEDDING_ESEMPI is not None:
+        return True
+
+    with LOCK_MODELLO_SEMANTICO:
+        if MODELLO_SEMANTICO is not None and EMBEDDING_ESEMPI is not None:
+            return True
+
+        try:
+            modello = SentenceTransformer(SEMANTIC_MODEL_NAME)
+            frasi: list[str] = []
+            etichette: list[str] = []
+
+            for intent, esempi in ESEMPI_INTENT_SEMANTICI.items():
+                for esempio in esempi:
+                    frasi.append(esempio)
+                    etichette.append(intent)
+
+            embedding = modello.encode(
+                frasi,
+                convert_to_tensor=True,
+                normalize_embeddings=True,
+                show_progress_bar=False,
+            )
+
+            MODELLO_SEMANTICO = modello
+            EMBEDDING_ESEMPI = embedding
+            ETICHETTE_ESEMPI = etichette
+            return True
+        except Exception as error:
+            app.logger.warning(
+                "Classificatore semantico non disponibile: %s",
+                error,
+            )
+            return False
+
+
+def classifica_intento_semantico(testo: str) -> tuple[str, float]:
+    testo = str(testo or "").strip()
+
+    if len(testo) < 4 or not carica_modello_semantico():
+        return "fallback", 0.0
+
+    try:
+        vettore_domanda = MODELLO_SEMANTICO.encode(
+            testo,
+            convert_to_tensor=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+        punteggi = util.cos_sim(
+            vettore_domanda,
+            EMBEDDING_ESEMPI,
+        )[0]
+
+        migliori_per_intent: dict[str, float] = {}
+
+        for indice, etichetta in enumerate(ETICHETTE_ESEMPI):
+            punteggio = float(punteggi[indice])
+            precedente = migliori_per_intent.get(etichetta, -1.0)
+
+            if punteggio > precedente:
+                migliori_per_intent[etichetta] = punteggio
+
+        classifica = sorted(
+            migliori_per_intent.items(),
+            key=lambda elemento: elemento[1],
+            reverse=True,
+        )
+
+        if not classifica:
+            return "fallback", 0.0
+
+        intent_migliore, punteggio_migliore = classifica[0]
+        secondo_punteggio = classifica[1][1] if len(classifica) > 1 else 0.0
+        margine = punteggio_migliore - secondo_punteggio
+
+        if (
+            punteggio_migliore >= SEMANTIC_THRESHOLD
+            and margine >= SEMANTIC_MARGIN
+        ):
+            return intent_migliore, punteggio_migliore
+
+        return "fallback", punteggio_migliore
+    except Exception as error:
+        app.logger.warning(
+            "Errore durante la classificazione semantica: %s",
+            error,
+        )
+        return "fallback", 0.0
+
+
+def classifica_followup(
+    sessione: dict[str, Any],
+    testo: str,
+) -> tuple[str, float]:
+    t = normalizza_testo(testo)
+    ultimo_intent = sessione.get("ultimo_intent", "")
+
+    richieste_motivo = {
+        "perche",
+        "e perche",
+        "come mai",
+        "spiegami meglio",
+        "qual e il motivo",
+    }
+
+    if t in richieste_motivo:
+        if ultimo_intent in {
+            "richiedi_alternative",
+            "altra_alternativa",
+            "lista_alternative",
+            "spiega_alternativa",
+        } or sessione.get("ultima_alternativa_proposta"):
+            return "spiega_alternativa", 0.99
+
+        if ultimo_intent in {
+            "controlla_compatibilita",
+            "spiega_compatibilita",
+            "dati_controllo",
+        }:
+            return "spiega_compatibilita", 0.99
+
+    if t in {
+        "e un altra",
+        "un altra",
+        "ancora",
+        "prossima",
+        "un altra opzione",
+    } and sessione.get("ultima_alternativa_proposta"):
+        return "altra_alternativa", 0.99
+
+    if t in {
+        "e tutte",
+        "mostramele tutte",
+        "fammi vedere tutte",
+        "quali sono tutte",
+    }:
+        return "lista_alternative", 0.99
 
     return "fallback", 0.0
 
@@ -1309,6 +2304,9 @@ def esegui_intento(
             bool(ultima),
         )
 
+    if intent == "spiega_meglio":
+        return risposta_spiega_meglio(sessione), True
+
     if intent == "semplifica_risposta":
         return risposta_semplice(sessione.get("ultima_risposta", "")), True
 
@@ -1362,6 +2360,9 @@ def esegui_intento(
     if intent == "chiedi_allergeni":
         return risposta_allergeni(sessione, testo), True
 
+    if intent == "spiega_personalizzazione":
+        return risposta_personalizzazione(sessione), True
+
     if intent == "info_profilo":
         return risposta_utente(sessione, testo), True
 
@@ -1410,6 +2411,10 @@ def health():
             "database_error": "" if db_ok else db_error,
             "dialogflow": DIALOGFLOW_ENABLED,
             "dialogflow_project": DIALOGFLOW_PROJECT_ID if DIALOGFLOW_ENABLED else "",
+            "semantic": SEMANTIC_AVAILABLE,
+            "semantic_model": SEMANTIC_MODEL_NAME if SEMANTIC_AVAILABLE else "",
+            "openai": OPENAI_AVAILABLE,
+            "openai_model": OPENAI_MODEL if OPENAI_AVAILABLE else "",
         }
     )
 
@@ -1461,53 +2466,120 @@ def chat():
 
     aggiungi_history(sessione, "user", user_message)
 
-    intent_locale, confidence_locale = classifica_intento_locale(user_message)
-    intent_specifici = {
-        "spiega_alternativa",
-        "spiega_compatibilita",
-        "dati_controllo",
-    }
-
-    dialogflow_result = rileva_intent_dialogflow(user_message, session_id)
     source = "locale"
     intent = ""
     confidence = 0.0
+    risposta = ""
+    understood = False
     fulfillment_text = ""
 
-    if intent_locale in intent_specifici:
-        intent = intent_locale
-        confidence = confidence_locale
-    elif dialogflow_result and not dialogflow_result["is_fallback"]:
-        intent = dialogflow_result["canonical_intent"]
-        confidence = dialogflow_result["confidence"]
-        fulfillment_text = dialogflow_result["fulfillment_text"]
-        source = "dialogflow"
-
-    if not intent:
-        intent = intent_locale
-        confidence = confidence_locale
-
-    risposta, understood = esegui_intento(
-        intent,
-        user_message,
-        sessione,
+    # I comandi rapidi e i controlli della conversazione restano locali.
+    intent_prioritario, confidence_prioritaria = intent_locale_prioritario(
+        user_message
     )
 
-    # Se Dialogflow ha riconosciuto un intent non mappato ma ha una risposta valida,
-    # usiamo il fulfillment invece del fallback locale.
-    if (
-        not understood
-        and dialogflow_result
-        and not dialogflow_result["is_fallback"]
-        and fulfillment_text.strip()
-    ):
-        risposta = fulfillment_text.strip()
-        understood = True
-        intent = dialogflow_result["display_name"] or "dialogflow"
-        confidence = dialogflow_result["confidence"]
-        source = "dialogflow"
+    if intent_prioritario:
+        intent = intent_prioritario
+        confidence = confidence_prioritaria
+        risposta, understood = esegui_intento(
+            intent,
+            user_message,
+            sessione,
+        )
+
+    # Tutte le altre domande pertinenti vengono interpretate da OpenAI
+    # utilizzando profilo, prodotti, compatibilità e cronologia reali.
+    if not intent and OPENAI_AVAILABLE:
+        risposta_ai = risposta_openai_smart_pantry(
+            sessione,
+            user_message,
+        )
+
+        if risposta_ai:
+            risposta = risposta_ai
+            understood = True
+            intent = "conversazione_smart_pantry"
+            confidence = 1.0
+            source = "openai"
+
+    # Piano di riserva gratuito: Dialogflow, regole e Sentence Transformers.
+    if not intent:
+        intent_locale, confidence_locale = classifica_intento_locale(user_message)
+        intent_specifici = {
+            "spiega_alternativa",
+            "spiega_compatibilita",
+            "dati_controllo",
+            "spiega_personalizzazione",
+            "spiega_meglio",
+        }
+
+        dialogflow_result = rileva_intent_dialogflow(user_message, session_id)
+
+        if intent_locale in intent_specifici:
+            intent = intent_locale
+            confidence = confidence_locale
+        elif (
+            dialogflow_result
+            and not dialogflow_result["is_fallback"]
+            and dialogflow_result["canonical_intent"]
+        ):
+            intent = dialogflow_result["canonical_intent"]
+            confidence = dialogflow_result["confidence"]
+            fulfillment_text = dialogflow_result["fulfillment_text"]
+            source = "dialogflow"
+        elif intent_locale != "fallback":
+            intent = intent_locale
+            confidence = confidence_locale
+
+        if not intent:
+            intent_followup, confidence_followup = classifica_followup(
+                sessione,
+                user_message,
+            )
+
+            if intent_followup != "fallback":
+                intent = intent_followup
+                confidence = confidence_followup
+                source = "contesto"
+
+        if not intent:
+            intent_semantico, confidence_semantica = classifica_intento_semantico(
+                user_message,
+            )
+
+            if intent_semantico != "fallback":
+                intent = intent_semantico
+                confidence = confidence_semantica
+                source = "semantico"
+
+        if not intent:
+            intent = "fallback"
+            confidence = 0.0
+
+        risposta, understood = esegui_intento(
+            intent,
+            user_message,
+            sessione,
+        )
+
+        # Se Dialogflow riconosce un intent non mappato ma possiede una
+        # risposta valida, usiamo il fulfillment.
+        if (
+            not understood
+            and dialogflow_result
+            and not dialogflow_result["is_fallback"]
+            and fulfillment_text.strip()
+        ):
+            risposta = fulfillment_text.strip()
+            understood = True
+            intent = dialogflow_result["display_name"] or "dialogflow"
+            confidence = dialogflow_result["confidence"]
+            source = "dialogflow"
 
     sessione["ultimo_messaggio_utente"] = user_message
+
+    if understood and intent != "ripeti_risposta":
+        sessione["ultimo_intent"] = intent
 
     if intent != "ripeti_risposta":
         sessione["ultima_risposta"] = risposta
@@ -1525,6 +2597,8 @@ def chat():
             "session_id": session_id,
             "source": source,
             "dialogflow_enabled": DIALOGFLOW_ENABLED,
+            "semantic_enabled": SEMANTIC_AVAILABLE,
+            "openai_enabled": OPENAI_AVAILABLE,
         }
     )
 
