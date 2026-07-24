@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creatore Dataset Smart Pantry</title>
+
+  <style>
+    :root {
+      --bg-1: #0f172a;
+      --bg-2: #14532d;
+      --card: rgba(255,255,255,.97);
+      --text: #111827;
+      --muted: #64748b;
+      --border: #dbe3ec;
+      --green: #16a34a;
+      --green-dark: #15803d;
+      --blue: #2563eb;
+      --orange: #f59e0b;
+      --red: #dc2626;
+      --teal: #0f766e;
+      --shadow: 0 24px 60px rgba(0,0,0,.24);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(34,197,94,.34), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(37,99,235,.28), transparent 34%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      text-align: center;
+      color: white;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      max-width: 820px;
+      margin: 10px auto 0;
+      color: #e2e8f0;
+      line-height: 1.55;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 21px;
+    }
+
+    .video-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #020617;
+      border: 4px solid white;
+      box-shadow: 0 14px 35px rgba(0,0,0,.18);
+    }
+
+    video {
+      display: block;
+      width: 100%;
+      height: auto;
+      transform: scaleX(-1);
+    }
+
+    .roi {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 56%;
+      aspect-ratio: 1 / 1;
+      transform: translate(-50%, -50%);
+      border: 4px dashed #22c55e;
+      border-radius: 22px;
+      box-shadow: 0 0 0 9999px rgba(15,23,42,.22);
+      pointer-events: none;
+    }
+
+    .roi-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, calc(-50% - min(28vw, 220px)));
+      background: #16a34a;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .status {
+      margin-top: 14px;
+      padding: 13px 15px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      line-height: 1.45;
+      color: #334155;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .primary { background: linear-gradient(135deg, var(--green), var(--green-dark)); color: white; }
+    .secondary { background: linear-gradient(135deg, var(--blue), #1d4ed8); color: white; }
+    .neutral { background: #e2e8f0; color: #334155; }
+    .danger { background: #fee2e2; color: #991b1b; }
+    .warning { background: #fef3c7; color: #92400e; }
+
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .class-button {
+      border-radius: 16px;
+      background: white;
+      color: #334155;
+      border: 2px solid var(--border);
+      padding: 14px;
+      text-align: left;
+      box-shadow: none;
+    }
+
+    .class-button.active {
+      border-color: var(--teal);
+      background: #ecfeff;
+      color: #134e4a;
+    }
+
+    .class-button strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .class-button small {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .counter-list {
+      margin-top: 16px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .counter-row {
+      display: grid;
+      grid-template-columns: 88px 1fr 52px;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .bar-track {
+      height: 10px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0f766e, #2563eb);
+      transition: width .2s;
+    }
+
+    .capture-settings {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      color: #475569;
+      font-weight: 700;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 11px;
+      background: white;
+      color: #111827;
+      font: inherit;
+    }
+
+    .preview {
+      margin-top: 18px;
+    }
+
+    .preview img {
+      width: 118px;
+      height: 118px;
+      object-fit: cover;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+    }
+
+    .tips {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .tip {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.22);
+      color: white;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .tip strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 15px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    canvas { display: none; }
+
+    @media (max-width: 900px) {
+      .grid, .tips { grid-template-columns: 1fr; }
+      .class-grid, .capture-settings { grid-template-columns: 1fr; }
+      .roi-label { transform: translate(-50%, -230%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Creatore Dataset Smart Pantry</h1>
+      <p>
+        Seleziona latte, pane, yogurt oppure uova, posiziona il prodotto nel quadrato centrale e acquisisci immagini.
+        Alla fine scaricherai uno ZIP organizzato in cartelle, pronto da scompattare e caricare
+        nel progetto Teachable Machine.
+      </p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2 class="section-title">Webcam e acquisizione</h2>
+
+        <div class="video-shell">
+          <video id="video" autoplay muted playsinline></video>
+          <div class="roi"></div>
+          <div id="roi-label" class="roi-label">Seleziona una classe</div>
+        </div>
+
+        <div id="status" class="status">
+          Premi “Avvia webcam”, poi scegli la classe da fotografare.
+        </div>
+
+        <div class="controls">
+          <button id="start-camera" class="primary">Avvia webcam</button>
+          <button id="single-shot" class="secondary" disabled>Scatta una foto</button>
+          <button id="auto-shot" class="warning" disabled>Avvia acquisizione automatica</button>
+          <button id="stop-auto" class="neutral" disabled>Ferma acquisizione</button>
+        </div>
+
+        <div class="capture-settings">
+          <label>
+            Intervallo automatico
+            <select id="interval">
+              <option value="180">Molto rapido · 180 ms</option>
+              <option value="280" selected>Consigliato · 280 ms</option>
+              <option value="450">Lento · 450 ms</option>
+              <option value="700">Molto lento · 700 ms</option>
+            </select>
+          </label>
+
+          <label>
+            Obiettivo immagini per classe
+            <input id="target-count" type="number" min="20" max="1000" step="10" value="200">
+          </label>
+        </div>
+
+        <div class="preview">
+          <strong>Ultimo ritaglio salvato</strong>
+          <div style="margin-top:10px">
+            <img id="preview-image" alt="Anteprima ultimo scatto">
+          </div>
+          <p class="small">
+            Viene salvata soltanto la zona centrale quadrata, non l’intera webcam.
+          </p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Classe corrente</h2>
+
+        <div class="class-grid">
+          <button class="class-button" data-class="latte">
+            <strong>Latte</strong>
+            <small>Cartoni e bottiglie di latte</small>
+          </button>
+          <button class="class-button" data-class="pane">
+            <strong>Pane</strong>
+            <small>Filoni, panini e confezioni</small>
+          </button>
+          <button class="class-button" data-class="yogurt">
+            <strong>Yogurt</strong>
+            <small>Vasetti e confezioni</small>
+          </button>
+          <button class="class-button" data-class="uova">
+            <strong>Uova</strong>
+            <small>Uovo singolo e confezione</small>
+          </button>
+        </div>
+
+        <div id="counter-list" class="counter-list"></div>
+
+        <div class="controls">
+          <button id="undo" class="neutral" disabled>Annulla ultimo scatto</button>
+          <button id="clear-class" class="danger" disabled>Svuota classe corrente</button>
+          <button id="export" class="primary" disabled>Scarica dataset ZIP</button>
+        </div>
+
+        <div class="status" style="margin-top:16px">
+          <strong>Formato dello ZIP</strong><br>
+          <span class="small">
+            dataset_smart_pantry/latte/*.jpg<br>
+            dataset_smart_pantry/pane/*.jpg<br>
+            dataset_smart_pantry/yogurt/*.jpg<br>
+            dataset_smart_pantry/uova/*.jpg
+          </span>
+        </div>
+      </section>
+    </main>
+
+    <section class="tips">
+      <div class="tip">
+        <strong>Muovi davvero il prodotto</strong>
+        Cambia distanza, inclinazione, orientamento, mano, luce e posizione nel quadrato.
+        Centinaia di foto quasi identiche valgono molto meno di immagini varie.
+      </div>
+      <div class="tip">
+        <strong>Mantieni le classi bilanciate</strong>
+        Cerca di raccogliere un numero simile di immagini per latte, pane, yogurt e uova,
+        variando sfondo, luce, distanza e orientamento.
+      </div>
+    </section>
+  </div>
+
+  <canvas id="capture-canvas" width="224" height="224"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    const CLASSI = ["latte", "pane", "yogurt", "uova"];
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("capture-canvas");
+    const ctx = canvas.getContext("2d", { alpha: false });
+
+    const statusBox = document.getElementById("status");
+    const previewImage = document.getElementById("preview-image");
+    const roiLabel = document.getElementById("roi-label");
+
+    const startCameraButton = document.getElementById("start-camera");
+    const singleShotButton = document.getElementById("single-shot");
+    const autoShotButton = document.getElementById("auto-shot");
+    const stopAutoButton = document.getElementById("stop-auto");
+    const undoButton = document.getElementById("undo");
+    const clearClassButton = document.getElementById("clear-class");
+    const exportButton = document.getElementById("export");
+
+    const intervalSelect = document.getElementById("interval");
+    const targetInput = document.getElementById("target-count");
+    const counterList = document.getElementById("counter-list");
+
+    const archivio = Object.fromEntries(CLASSI.map(nome => [nome, []]));
+
+    let classeCorrente = "";
+    let stream = null;
+    let autoTimer = null;
+    let ultimoScatto = null;
+
+    function totaleImmagini() {
+      return CLASSI.reduce((totale, nome) => totale + archivio[nome].length, 0);
+    }
+
+    function aggiornaInterfaccia() {
+      const webcamAttiva = Boolean(stream);
+      const classeScelta = classeCorrente !== "";
+      const acquisizioneAttiva = autoTimer !== null;
+
+      singleShotButton.disabled = !webcamAttiva || !classeScelta || acquisizioneAttiva;
+      autoShotButton.disabled = !webcamAttiva || !classeScelta || acquisizioneAttiva;
+      stopAutoButton.disabled = !acquisizioneAttiva;
+      undoButton.disabled = ultimoScatto === null || acquisizioneAttiva;
+      clearClassButton.disabled =
+        !classeScelta || archivio[classeCorrente].length === 0 || acquisizioneAttiva;
+      exportButton.disabled = totaleImmagini() === 0 || acquisizioneAttiva;
+
+      document.querySelectorAll(".class-button").forEach(button => {
+        button.classList.toggle("active", button.dataset.class === classeCorrente);
+      });
+
+      roiLabel.textContent = classeScelta
+        ? "Classe: " + classeCorrente.toUpperCase()
+        : "Seleziona una classe";
+
+      aggiornaContatori();
+    }
+
+    function aggiornaContatori() {
+      const target = Math.max(1, Number(targetInput.value) || 200);
+      counterList.innerHTML = "";
+
+      CLASSI.forEach(nome => {
+        const count = archivio[nome].length;
+        const percent = Math.min(100, (count / target) * 100);
+
+        const row = document.createElement("div");
+        row.className = "counter-row";
+        row.innerHTML = `
+          <strong>${nome}</strong>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${percent}%"></div>
+          </div>
+          <span>${count}</span>
+        `;
+        counterList.appendChild(row);
+      });
+    }
+
+    async function avviaWebcam() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user"
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        await video.play();
+
+        statusBox.textContent =
+          "Webcam attiva. Scegli latte, pane, yogurt oppure uova.";
+        startCameraButton.textContent = "Webcam attiva";
+        startCameraButton.disabled = true;
+        aggiornaInterfaccia();
+      } catch (errore) {
+        statusBox.textContent =
+          "Impossibile avviare la webcam. Controlla i permessi del browser.";
+        console.error(errore);
+      }
+    }
+
+    function scegliClasse(nome) {
+      if (!CLASSI.includes(nome)) return;
+
+      classeCorrente = nome;
+      statusBox.textContent =
+        "Classe selezionata: " + nome +
+        ". Posiziona il soggetto nel quadrato centrale e varia lentamente l’inquadratura.";
+      aggiornaInterfaccia();
+    }
+
+    function calcolaRitaglioQuadrato() {
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      const lato = Math.min(vw, vh) * 0.56;
+
+      return {
+        x: (vw - lato) / 2,
+        y: (vh - lato) / 2,
+        lato
+      };
+    }
+
+    function canvasInBlob() {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error("Creazione immagine non riuscita"));
+        }, "image/jpeg", 0.92);
+      });
+    }
+
+    async function scattaFoto() {
+      if (!stream || !classeCorrente || video.readyState < 2) return;
+
+      const crop = calcolaRitaglioQuadrato();
+
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Specchia anche l'immagine salvata, come viene vista nell'anteprima.
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+
+      ctx.drawImage(
+        video,
+        crop.x,
+        crop.y,
+        crop.lato,
+        crop.lato,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+      ctx.restore();
+
+      const blob = await canvasInBlob();
+      const numero = archivio[classeCorrente].length + 1;
+      const nomeFile =
+        classeCorrente + "_" +
+        String(numero).padStart(4, "0") + "_" +
+        Date.now() + ".jpg";
+
+      archivio[classeCorrente].push({
+        nome: nomeFile,
+        blob
+      });
+
+      ultimoScatto = {
+        classe: classeCorrente,
+        nome: nomeFile
+      };
+
+      if (previewImage.src.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImage.src);
+      }
+
+      previewImage.src = URL.createObjectURL(blob);
+
+      statusBox.textContent =
+        "Salvata immagine " + archivio[classeCorrente].length +
+        " nella classe “" + classeCorrente + "”.";
+
+      aggiornaInterfaccia();
+    }
+
+    function avviaAuto() {
+      if (autoTimer !== null || !stream || !classeCorrente) return;
+
+      const intervallo = Math.max(120, Number(intervalSelect.value) || 280);
+      const classeAllAvvio = classeCorrente;
+
+      statusBox.textContent =
+        "Acquisizione automatica per “" + classeAllAvvio +
+        "”. Muovi lentamente prodotto, distanza e inclinazione.";
+
+      autoTimer = setInterval(async () => {
+        if (classeCorrente !== classeAllAvvio) {
+          fermaAuto();
+          return;
+        }
+
+        try {
+          await scattaFoto();
+        } catch (errore) {
+          console.error(errore);
+          fermaAuto();
+        }
+      }, intervallo);
+
+      aggiornaInterfaccia();
+    }
+
+    function fermaAuto() {
+      if (autoTimer !== null) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+      }
+
+      statusBox.textContent =
+        classeCorrente
+          ? "Acquisizione fermata. Classe corrente: " + classeCorrente + "."
+          : "Acquisizione fermata.";
+
+      aggiornaInterfaccia();
+    }
+
+    function annullaUltimoScatto() {
+      if (!ultimoScatto) return;
+
+      const lista = archivio[ultimoScatto.classe];
+      const indice = lista.findIndex(item => item.nome === ultimoScatto.nome);
+
+      if (indice >= 0) {
+        lista.splice(indice, 1);
+      }
+
+      statusBox.textContent =
+        "Ultimo scatto rimosso dalla classe “" + ultimoScatto.classe + "”.";
+      ultimoScatto = null;
+      aggiornaInterfaccia();
+    }
+
+    function svuotaClasseCorrente() {
+      if (!classeCorrente) return;
+
+      const conferma = window.confirm(
+        "Vuoi eliminare tutte le immagini della classe “" +
+        classeCorrente + "”?"
+      );
+
+      if (!conferma) return;
+
+      archivio[classeCorrente] = [];
+
+      if (ultimoScatto && ultimoScatto.classe === classeCorrente) {
+        ultimoScatto = null;
+      }
+
+      statusBox.textContent =
+        "Classe “" + classeCorrente + "” svuotata.";
+      aggiornaInterfaccia();
+    }
+
+    async function esportaZip() {
+      if (totaleImmagini() === 0) return;
+
+      exportButton.disabled = true;
+      statusBox.textContent = "Creazione ZIP in corso...";
+
+      try {
+        const zip = new JSZip();
+        const root = zip.folder("dataset_smart_pantry");
+
+        const riepilogo = {
+          creato_il: new Date().toISOString(),
+          dimensione_immagini: "224x224",
+          classi: {},
+          nota:
+            "Scompattare lo ZIP e caricare le immagini di ogni cartella nella corrispondente classe di Teachable Machine."
+        };
+
+        for (const nomeClasse of CLASSI) {
+          const folder = root.folder(nomeClasse);
+          const immagini = archivio[nomeClasse];
+
+          riepilogo.classi[nomeClasse] = immagini.length;
+
+          for (const immagine of immagini) {
+            folder.file(immagine.nome, immagine.blob);
+          }
+        }
+
+        root.file(
+          "dataset_info.json",
+          JSON.stringify(riepilogo, null, 2)
+        );
+
+        root.file(
+          "ISTRUZIONI.txt",
+          [
+            "DATASET SMART PANTRY",
+            "",
+            "1. Estrai lo ZIP sul computer.",
+            "2. In Teachable Machine crea le classi:",
+            "   latte, pane, yogurt, uova.",
+            "3. Apri ogni cartella e carica le relative immagini",
+            "   nella classe con lo stesso nome.",
+            "4. Addestra il modello.",
+            "5. Esporta come TensorFlow.js.",
+            ""
+          ].join("\n")
+        );
+
+        const blob = await zip.generateAsync({
+          type: "blob",
+          compression: "DEFLATE",
+          compressionOptions: { level: 6 }
+        });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download =
+          "dataset_smart_pantry_" +
+          new Date().toISOString().slice(0, 10) +
+          ".zip";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+
+        statusBox.textContent =
+          "ZIP creato con " + totaleImmagini() +
+          " immagini. Estrailo prima di caricare le cartelle su Teachable Machine.";
+      } catch (errore) {
+        statusBox.textContent =
+          "Errore durante la creazione dello ZIP.";
+        console.error(errore);
+      } finally {
+        aggiornaInterfaccia();
+      }
+    }
+
+    document.querySelectorAll(".class-button").forEach(button => {
+      button.addEventListener("click", () => scegliClasse(button.dataset.class));
+    });
+
+    startCameraButton.addEventListener("click", avviaWebcam);
+    singleShotButton.addEventListener("click", scattaFoto);
+    autoShotButton.addEventListener("click", avviaAuto);
+    stopAutoButton.addEventListener("click", fermaAuto);
+    undoButton.addEventListener("click", annullaUltimoScatto);
+    clearClassButton.addEventListener("click", svuotaClasseCorrente);
+    exportButton.addEventListener("click", esportaZip);
+    targetInput.addEventListener("input", aggiornaContatori);
+
+    window.addEventListener("beforeunload", event => {
+      if (totaleImmagini() > 0) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    });
+
+    aggiornaInterfaccia();
+  </script>
+</body>
+</html>
