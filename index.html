@@ -173,8 +173,8 @@
             position: absolute;
             left: 50%;
             top: 50%;
-            width: 55%;
-            height: 55%;
+            width: 50%;
+            height: 50%;
             transform: translate(-50%, -50%);
             border: 4px dashed #22c55e;
             border-radius: 22px;
@@ -311,6 +311,21 @@
             border-radius: 18px;
             background: var(--warning-soft);
             border: 1px solid #fde68a;
+        }
+
+        .supported-foods-panel {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 13px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .supported-foods-panel strong {
+            color: #166534;
         }
 
         .assistant-card {
@@ -692,33 +707,100 @@
         }
 
         .project-info {
-            margin-top: 24px;
+            margin-top: 28px;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
+            gap: 16px;
         }
 
         .info-mini {
-            padding: 16px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.14);
+            min-height: 108px;
+            padding: 18px 14px;
+            border-radius: 22px;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.15),
+                    rgba(255, 255, 255, 0.09)
+                );
             border: 1px solid rgba(255, 255, 255, 0.24);
             color: white;
             text-align: center;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.14);
+            transition:
+                transform 0.18s ease,
+                border-color 0.18s ease,
+                background 0.18s ease;
+        }
+
+        .info-mini:hover {
+            transform: translateY(-3px);
+            border-color: rgba(134, 239, 172, 0.62);
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(20, 83, 45, 0.46),
+                    rgba(37, 99, 235, 0.20)
+                );
         }
 
         .info-mini strong {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 11px;
+            border-radius: 50%;
+            background: rgba(51, 65, 85, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 800;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        .info-mini span {
             display: block;
-            font-size: 20px;
-            margin-bottom: 4px;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.3;
         }
 
         .footer-note {
-            margin-top: 22px;
-            text-align: center;
-            color: #d1d5db;
-            font-size: 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 17px;
+        }
+
+        .footer-note-block {
+            padding: 17px 19px;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.67);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #dbeafe;
+            font-size: 12px;
+            line-height: 1.55;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.13);
+        }
+
+        .footer-note-block strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #ffffff;
+            font-size: 13px;
+        }
+
+        .footer-note-block.medical {
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(120, 53, 15, 0.78),
+                    rgba(153, 27, 27, 0.68)
+                );
+            border-color: rgba(253, 186, 116, 0.34);
         }
 
         @media (max-width: 980px) {
@@ -735,7 +817,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .project-info {
+            .project-info,
+            .footer-note {
                 grid-template-columns: 1fr;
             }
 
@@ -758,8 +841,10 @@
             <h1>Smart Pantry Tutor</h1>
 
             <p class="subtitle">
-                Sistema intelligente che riconosce l’utente, identifica alimenti tramite modelli visivi,
-                consulta un database MySQL, segnala possibili allergeni e suggerisce alternative personalizzate.
+                Mostra un alimento: Smart Pantry lo riconosce, lo confronta con il tuo profilo
+                e ti aiuta a fare una scelta più consapevole.
+                Riconoscimento visivo, controllo personalizzato e assistenza conversazionale
+                in un’unica esperienza.
             </p>
         </div>
 
@@ -1030,40 +1115,50 @@
             <div id="label-container"></div>
         </div>
 
-        <div class="project-info">
-
+        <div class="project-info" aria-label="Moduli di Smart Pantry">
             <div class="info-mini">
                 <strong>1</strong>
-                Riconoscimento utente
+                <span>Riconoscimento utente</span>
             </div>
 
             <div class="info-mini">
                 <strong>2</strong>
-                Riconoscimento alimento
+                <span>Riconoscimento alimento</span>
             </div>
 
             <div class="info-mini">
                 <strong>3</strong>
-                Controllo database
+                <span>Controllo database</span>
             </div>
 
             <div class="info-mini">
                 <strong>4</strong>
-                Assistente chat e voce
+                <span>Assistente chat e voce</span>
+            </div>
+        </div>
+
+        <footer class="footer-note">
+            <div class="footer-note-block">
+                <strong>Nota sull’affidabilità</strong>
+                Smart Pantry Tutor supporta una valutazione iniziale, ma non sostituisce
+                la lettura dell’etichetta: ingredienti e allergeni possono variare
+                tra marche, ricette e confezioni.
             </div>
 
-        </div>
-
-        <div class="footer-note">
-            Smart Pantry Tutor non sostituisce il controllo reale dell’etichetta: gli allergeni sono stimati in base alla categoria visiva dell’alimento e ai dati presenti nel database.
-            <br><strong>Chat ibrida: domande rapide, testo libero, voce, sessione separata e recupero automatico</strong>
-        </div>
+            <div class="footer-note-block medical">
+                <strong>Avvertenza sanitaria</strong>
+                Smart Pantry Tutor non è un medico e non fornisce diagnosi o indicazioni
+                sanitarie definitive. In caso di allergie, intolleranze, sintomi o dubbi,
+                rivolgiti al medico, all’allergologo o a un altro professionista sanitario.
+            </div>
+        </footer>
 
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
 
     <script>
@@ -1073,6 +1168,10 @@
         let userModel;
         let foodModel;
         let customFoodModel;
+        let genericObjectModel = null;
+        let customFoodEmbeddingBackbone = null;
+        let foodPrototypeConfig = null;
+        let foodPrototypeStatus = "non-caricato";
         let faceModel;
 
         let video;
@@ -1149,14 +1248,136 @@
         let sommaConfidenzeCandidato = 0;
         let ultimoSegnaleCoco = null;
 
+        /*
+            Firma dell'inquadratura senza alimento, acquisita appena viene
+            riconosciuto l'utente. Serve a capire se, durante l'analisi,
+            è comparso davvero un nuovo oggetto.
+        */
+        let firmaAttesaAlimento = null;
+
+        /*
+            Cache del rilevamento volto durante l'analisi del prodotto.
+            Evita di eseguire BlazeFace inutilmente a ogni singolo frame.
+        */
+        let ultimoControlloVoltoAlimento = {
+            timestamp: 0,
+            presenteNelRiquadro: false,
+            rapportoRiquadro: 0,
+            rapportoVolto: 0
+        };
+
+        /*
+            Analisi alimento a finestra finita.
+            Le previsioni restano interne: l'interfaccia mostra soltanto
+            il risultato conclusivo oppure "oggetto non presente".
+        */
+        const DURATA_ANALISI_INTERNA_ALIMENTO = 6500;
+        const NUMERO_FIRME_BASELINE = 2;
+        const DIFFERENZA_MINIMA_DALLO_SFONDO = 0.055;
+        /*
+            COCO-SSD sulle fotografie mostrate dal telefono restituisce spesso
+            confidenze inferiori rispetto agli oggetti reali. La soglia viene
+            quindi abbassata, mantenendo la conferma su più fotogrammi.
+        */
+        const SOGLIA_INTERNA_COCO = 0.32;
+        const SOGLIA_INTERNA_TM = 0.56;
+        const MARGINE_INTERNO_TM = 0.07;
+        const EVIDENZE_MINIME_COCO = 2;
+        const EVIDENZE_MINIME_TM = 3;
+        const SOGLIA_PERSONA_DOMINANTE = 0.88;
+
+        /*
+            Controlli contro il falso riconoscimento della faccia come uova.
+        */
+        const DIFFERENZA_MINIMA_NUOVO_OGGETTO = 0.035;
+        const SOGLIA_VOLTO_SU_RIQUADRO = 0.22;
+        const SOGLIA_VOLTO_INTERNO = 0.65;
+        const DURATA_CACHE_VOLTO_ALIMENTO = 700;
+
+        /*
+            Filtro open-set positivo per Teachable Machine.
+            Non viene aggiunta una classe "Altro": latte, yogurt, pane e uova
+            vengono confrontati con esempi positivi. Le classi COCO usano invece
+            il rilevamento nativo, una soglia temporale e il veto delle classi
+            COCO non alimentari.
+        */
+        const FOOD_PROTOTYPES_URL = "./food_model/food_prototypes.json";
+        /*
+            Chiave nuova: ignora eventuali calibrazioni precedenti rimaste
+            nel localStorage e usa il JSON corretto presente in food_model.
+        */
+        const FOOD_PROTOTYPES_STORAGE_KEY =
+            "smart_pantry_food_prototypes_v3_runtime";
+        const SOGLIA_SIMILARITA_PROTOTIPO_DEFAULT = 0.70;
+        const MARGINE_PROTOTIPI_DEFAULT = 0.012;
+
+        /*
+            Soglie operative bilanciate.
+            Le soglie generate automaticamente dai soli esempi positivi
+            possono diventare troppo alte (anche oltre 0.90) e rifiutare
+            alimenti corretti ripresi con luce, distanza o angolazione diverse.
+            Manteniamo quindi un controllo open-set, ma permettiamo un secondo
+            percorso di accettazione quando:
+            - la classe proposta è davvero la più vicina;
+            - la similarità è almeno moderata;
+            - il margine sulle altre classi è netto.
+        */
+        const SOGLIA_OPERATIVA_PROTOTIPO_REALE = 0.60;
+        const SOGLIA_OPERATIVA_PROTOTIPO_TELEFONO = 0.62;
+        const MARGINE_OPERATIVO_PROTOTIPO = 0.06;
+        const SOGLIA_TELEFONO_COCO = 0.28;
+        const AREA_MINIMA_TELEFONO = 0.08;
+        const RIDUZIONE_BORDO_SCHERMO_X = 0.08;
+        const RIDUZIONE_BORDO_SCHERMO_Y = 0.10;
+
+        /*
+            Strategia ibrida rapida:
+            - COCO mantiene il proprio rilevamento nativo e NON richiede calibrazione;
+            - i prototipi open-set servono soltanto per latte, yogurt, pane e uova;
+            - le classi COCO non alimentari possono bloccare falsi positivi evidenti
+              (per esempio sports ball mostrato sul telefono -> torta/yogurt).
+        */
+        const COCO_CLASSI_SUPPORTO = new Set([
+            "person", "cell phone", "bottle", "cup", "bowl", "dining table"
+        ]);
+        const COCO_CLASSI_VETO_FORTE = new Set([
+            "sports ball", "frisbee", "skis", "snowboard", "kite",
+            "baseball bat", "baseball glove", "skateboard", "surfboard",
+            "tennis racket", "backpack", "umbrella", "handbag", "tie",
+            "suitcase", "chair", "couch", "bed", "tv", "laptop",
+            "mouse", "remote", "keyboard", "book", "clock", "vase",
+            "scissors", "teddy bear", "hair drier", "toothbrush"
+        ]);
+        const SOGLIA_VETO_FORTE_COCO = 0.38;
+        const SOGLIA_VETO_GENERICO_COCO = 0.66;
+        const AREA_MINIMA_VETO_COCO = 0.08;
+        const EVIDENZE_MINIME_VETO_COCO = 2;
+
+        const SOGLIA_VETO_MOBILENET = 0.16;
+        const EVIDENZE_MINIME_VETO_MOBILENET = 2;
+        const ACCORDO_MINIMO_RITAGLI_TM = 2;
+
+        const TERMINI_VETO_MOBILENET = [
+            "soccer ball", "football", "basketball", "volleyball",
+            "rugby ball", "baseball", "tennis ball",
+            "electric fan", "fan", "vacuum", "hair dryer",
+            "keyboard", "computer mouse", "remote control",
+            "laptop", "desktop computer", "television",
+            "chair", "armchair", "sofa", "couch", "bed",
+            "toilet", "washing machine", "printer", "clock",
+            "table lamp", "desk lamp", "shoe", "sneaker",
+            "backpack", "suitcase", "umbrella", "car", "truck",
+            "bus", "motorcycle", "bicycle", "dog", "cat", "bird"
+        ];
+
+        let analisiAlimentoCorrente = null;
+
         const foodClasses = [
             "banana",
             "apple",
-            "sandwich",
             "orange",
             "broccoli",
             "carrot",
-            "hot dog",
             "pizza",
             "donut",
             "cake"
@@ -1172,11 +1393,9 @@
         const allergenInfo = {
             "banana": "Nessun allergene principale normalmente associato.",
             "apple": "Nessun allergene principale normalmente associato.",
-            "sandwich": "Gli allergeni dipendono dagli ingredienti: possibili glutine, lattosio, uova, senape o altri allergeni.",
             "orange": "Nessun allergene principale normalmente associato.",
             "broccoli": "Nessun allergene principale normalmente associato.",
             "carrot": "Nessun allergene principale normalmente associato.",
-            "hot dog": "Possibili allergeni: glutine, lattosio, senape.",
             "pizza": "Possibili allergeni: glutine, lattosio.",
             "donut": "Possibili allergeni: glutine, lattosio, uova.",
             "cake": "Possibili allergeni: glutine, lattosio, uova, frutta a guscio.",
@@ -1190,11 +1409,9 @@
         const foodDisplayName = {
             "banana": "banana",
             "apple": "mela",
-            "sandwich": "sandwich",
             "orange": "arancia",
             "broccoli": "broccoli",
             "carrot": "carota",
-            "hot dog": "hot dog",
             "pizza": "pizza",
             "donut": "donut",
             "cake": "torta",
@@ -1207,6 +1424,16 @@
 
         function nomeAlimento(alimento) {
             return foodDisplayName[alimento] || alimento;
+        }
+
+        function creaElencoAlimentiSupportati() {
+            return (
+                "<div class='supported-foods-panel'>" +
+                    "<strong>Alimenti riconoscibili:</strong> " +
+                    "banana, mela, arancia, broccoli, carota, pizza, " +
+                    "donut, torta, latte, uova, pane e yogurt." +
+                "</div>"
+            );
         }
 
         function creaSessionId() {
@@ -1655,13 +1882,21 @@
                 );
                 maxCustomFoodPredictions = customFoodModel.getTotalClasses();
 
-                foodModel = await cocoSsd.load();
+                foodPrototypeStatus = "disattivato";
+
+                const modelliGenerali = await Promise.all([
+                    cocoSsd.load(),
+                    mobilenet.load()
+                ]);
+
+                foodModel = modelliGenerali[0];
+                genericObjectModel = modelliGenerali[1];
 
                 riconoscimentoAlimentoAttivo = false;
 
                 document.getElementById("risultato-alimento").innerHTML =
                     "Riconoscimento alimento bloccato" +
-                    "<br><span class='small-text'>Prima fai riconoscere l’utente; poi si attiverà il pulsante per analizzare il cibo.</span>";
+                    "<br><span class='small-text'>Prima fai riconoscere l’utente; poi potrai analizzare il prodotto senza calibrazione aggiuntiva.</span>";
 
             } catch (error) {
 
@@ -1822,62 +2057,108 @@
 
         }
 
-        function trovaMiglioreAlimentoCoco(predictions, boxCentrale) {
+        function trovaMiglioreAlimentoCoco(
+            predictions,
+            boxOrigine,
+            canvasWidth,
+            canvasHeight,
+            modalita = "centrale"
+        ) {
 
-            const candidati = [];
-
-            for (let i = 0; i < predictions.length; i++) {
-
-                const prediction = predictions[i];
-                const className = prediction.class.toLowerCase();
-
-                if (!foodClasses.includes(className)) {
-                    continue;
-                }
-
-                candidati.push(prediction);
-
+            if (
+                !Array.isArray(predictions) ||
+                !boxOrigine ||
+                !canvasWidth ||
+                !canvasHeight
+            ) {
+                return null;
             }
+
+            const candidati = predictions
+                .filter(function(prediction) {
+                    const className = String(
+                        prediction.class || ""
+                    ).toLowerCase();
+
+                    return (
+                        foodClasses.includes(className) &&
+                        Array.isArray(prediction.bbox)
+                    );
+                })
+                .sort((a, b) => b.score - a.score);
 
             if (candidati.length === 0) {
                 return null;
             }
-
-            candidati.sort((a, b) => b.score - a.score);
 
             const migliore = candidati[0];
             const secondaConfidenza =
                 candidati.length > 1 ? candidati[1].score : 0;
             const bbox = migliore.bbox;
 
-            /*
-                COCO lavora sul canvas del ritaglio centrale mantenendo
-                il rapporto originale. Riportiamo il suo bounding box nelle coordinate originali
-                della webcam, così il rettangolo viene disegnato nel punto giusto.
-            */
-            const scalaX = boxCentrale.w / foodDetectionCanvas.width;
-            const scalaY = boxCentrale.h / foodDetectionCanvas.height;
+            const scalaX = boxOrigine.w / canvasWidth;
+            const scalaY = boxOrigine.h / canvasHeight;
 
             return {
-                className: migliore.class.toLowerCase(),
-                confidence: migliore.score,
-                secondConfidence: secondaConfidenza,
-                margin: migliore.score - secondaConfidenza,
+                className: String(migliore.class).toLowerCase(),
+                confidence: Number(migliore.score || 0),
+                secondConfidence: Number(secondaConfidenza || 0),
+                margin:
+                    Number(migliore.score || 0) -
+                    Number(secondaConfidenza || 0),
                 source: "coco",
+                cocoMode: modalita,
                 box: {
-                    x: boxCentrale.x + bbox[0] * scalaX,
-                    y: boxCentrale.y + bbox[1] * scalaY,
+                    x: boxOrigine.x + bbox[0] * scalaX,
+                    y: boxOrigine.y + bbox[1] * scalaY,
                     w: bbox[2] * scalaX,
                     h: bbox[3] * scalaY
                 }
             };
+        }
 
+        function scegliMiglioreCandidatoCoco(candidati) {
+            const validi = candidati.filter(Boolean);
+
+            if (validi.length === 0) {
+                return null;
+            }
+
+            /*
+                A parità di classe/confidenza diamo un piccolo vantaggio:
+                - al ritaglio dello schermo, quando il telefono è presente;
+                - al riquadro centrale;
+                - infine al fotogramma completo.
+            */
+            const bonusModalita = {
+                schermo: 0.08,
+                centrale: 0.04,
+                completo: 0
+            };
+
+            validi.sort(function(a, b) {
+                const punteggioA =
+                    a.confidence +
+                    (bonusModalita[a.cocoMode] || 0);
+                const punteggioB =
+                    b.confidence +
+                    (bonusModalita[b.cocoMode] || 0);
+
+                return punteggioB - punteggioA;
+            });
+
+            return validi[0];
         }
 
         function creaBoxAreaCentrale() {
 
-            const w = video.videoWidth * 0.55;
-            const h = video.videoHeight * 0.55;
+            /*
+                Il riquadro principale è al 50%. Teachable Machine analizza
+                anche un ritaglio interno all'84%, equivalente a circa il 42%
+                della webcam usato nel dataset.
+            */
+            const w = video.videoWidth * 0.50;
+            const h = video.videoHeight * 0.50;
 
             return {
                 x: (video.videoWidth - w) / 2,
@@ -1940,6 +2221,662 @@
 
         }
 
+
+        function normalizzaEtichettaClasse(testo) {
+            return String(testo || "").trim().toLowerCase();
+        }
+
+        function normalizzaVettore(vettore) {
+            if (!Array.isArray(vettore) || vettore.length === 0) {
+                return null;
+            }
+
+            let normaQuadrata = 0;
+
+            for (let i = 0; i < vettore.length; i++) {
+                const valore = Number(vettore[i]) || 0;
+                normaQuadrata += valore * valore;
+            }
+
+            const norma = Math.sqrt(normaQuadrata);
+
+            if (!Number.isFinite(norma) || norma <= 1e-12) {
+                return null;
+            }
+
+            return vettore.map(function(valore) {
+                return (Number(valore) || 0) / norma;
+            });
+        }
+
+        function similaritaCoseno(vettoreA, vettoreB) {
+            if (
+                !Array.isArray(vettoreA) ||
+                !Array.isArray(vettoreB) ||
+                vettoreA.length === 0 ||
+                vettoreA.length !== vettoreB.length
+            ) {
+                return -1;
+            }
+
+            let prodotto = 0;
+
+            for (let i = 0; i < vettoreA.length; i++) {
+                prodotto += vettoreA[i] * vettoreB[i];
+            }
+
+            return prodotto;
+        }
+
+        function trovaModelloInternoTeachable(modelWrapper) {
+            if (!modelWrapper) {
+                return null;
+            }
+
+            const candidati = [
+                modelWrapper.model,
+                modelWrapper._model,
+                modelWrapper
+            ];
+
+            for (const candidato of candidati) {
+                if (
+                    candidato &&
+                    Array.isArray(candidato.layers) &&
+                    candidato.layers.length > 0
+                ) {
+                    return candidato;
+                }
+            }
+
+            for (const valore of Object.values(modelWrapper)) {
+                if (
+                    valore &&
+                    Array.isArray(valore.layers) &&
+                    valore.layers.length > 0 &&
+                    typeof valore.predict === "function"
+                ) {
+                    return valore;
+                }
+            }
+
+            return null;
+        }
+
+        function inizializzaEstrattoreEmbeddingAlimenti() {
+            customFoodEmbeddingBackbone = null;
+
+            const modelloInterno =
+                trovaModelloInternoTeachable(customFoodModel);
+
+            if (!modelloInterno || !Array.isArray(modelloInterno.layers)) {
+                console.warn(
+                    "Impossibile trovare il modello interno Teachable Machine."
+                );
+                return false;
+            }
+
+            /*
+                Nel modello esportato da Teachable Machine il primo blocco è
+                MobileNet con GlobalAveragePooling: il suo output è un embedding
+                visuale, prima della testa Dense che forza una delle quattro classi.
+            */
+            const candidato = modelloInterno.layers.find(function(layer) {
+                return (
+                    layer &&
+                    typeof layer.predict === "function" &&
+                    Array.isArray(layer.layers) &&
+                    layer.layers.some(function(innerLayer) {
+                        return String(innerLayer.name || "")
+                            .toLowerCase()
+                            .includes("global_average_pooling");
+                    })
+                );
+            }) || modelloInterno.layers[0];
+
+            if (!candidato || typeof candidato.predict !== "function") {
+                console.warn(
+                    "Backbone visuale Teachable Machine non disponibile."
+                );
+                return false;
+            }
+
+            customFoodEmbeddingBackbone = candidato;
+            console.log(
+                "Estrattore embedding alimenti pronto:",
+                candidato.name || "backbone"
+            );
+            return true;
+        }
+
+        async function estraiEmbeddingAlimento(immagine) {
+            if (!customFoodEmbeddingBackbone || !immagine) {
+                return null;
+            }
+
+            let outputTensor = null;
+
+            try {
+                outputTensor = tf.tidy(function() {
+                    const input = tf.browser
+                        .fromPixels(immagine)
+                        .toFloat()
+                        .div(127.5)
+                        .sub(1)
+                        .expandDims(0);
+
+                    const output =
+                        customFoodEmbeddingBackbone.predict(input);
+                    const tensor = Array.isArray(output)
+                        ? output[0]
+                        : output;
+
+                    return tensor.squeeze().clone();
+                });
+
+                const dati = Array.from(await outputTensor.data());
+                return normalizzaVettore(dati);
+            } catch (error) {
+                console.error(
+                    "Errore estrazione embedding alimento:",
+                    error
+                );
+                return null;
+            } finally {
+                if (outputTensor) {
+                    outputTensor.dispose();
+                }
+            }
+        }
+
+        function prototipiValidi(config) {
+            if (
+                !config ||
+                config.version !== 2 ||
+                !config.classes ||
+                typeof config.classes !== "object"
+            ) {
+                return false;
+            }
+
+            // I prototipi servono soltanto per le quattro classi
+            // personalizzate di Teachable Machine. COCO possiede già il
+            // concetto di background e non deve essere calibrato alimento per alimento.
+            const classiRichieste = [...customFoodClasses];
+
+            return classiRichieste.every(function(className) {
+                const voce = config.classes[className];
+                return Boolean(
+                    voce &&
+                    voce.modes &&
+                    ["reale", "telefono"].every(function(mode) {
+                        const modalita = voce.modes[mode];
+                        return Boolean(
+                            modalita &&
+                            Array.isArray(modalita.exemplars) &&
+                            modalita.exemplars.length >= 3 &&
+                            Number.isFinite(Number(modalita.threshold)) &&
+                            Number.isFinite(Number(modalita.margin))
+                        );
+                    })
+                );
+            });
+        }
+
+        async function caricaPrototipiAlimenti() {
+            foodPrototypeConfig = null;
+            foodPrototypeStatus = "non-caricato";
+
+            const candidati = [];
+
+            try {
+                const locale = localStorage.getItem(
+                    FOOD_PROTOTYPES_STORAGE_KEY
+                );
+
+                if (locale) {
+                    candidati.push(JSON.parse(locale));
+                }
+            } catch (error) {
+                console.warn(
+                    "Prototipi locali non leggibili:",
+                    error
+                );
+            }
+
+            try {
+                const risposta = await fetch(
+                    FOOD_PROTOTYPES_URL + "?v=" + Date.now(),
+                    { cache: "no-store" }
+                );
+
+                if (risposta.ok) {
+                    candidati.push(await risposta.json());
+                }
+            } catch (error) {
+                console.info(
+                    "File food_prototypes.json non ancora presente."
+                );
+            }
+
+            const validi = candidati
+                .filter(prototipiValidi)
+                .sort(function(a, b) {
+                    const dataA = Date.parse(a.generatedAt || 0) || 0;
+                    const dataB = Date.parse(b.generatedAt || 0) || 0;
+                    return dataB - dataA;
+                });
+
+            if (validi.length === 0) {
+                foodPrototypeStatus = "mancante";
+                console.warn(
+                    "Calibrazione v2 delle classi Teachable Machine mancante."
+                );
+                return false;
+            }
+
+            foodPrototypeConfig = validi[0];
+            foodPrototypeStatus = "caricato";
+
+            console.log(
+                "Prototipi alimenti v2 caricati:",
+                Object.keys(foodPrototypeConfig.classes)
+            );
+            return true;
+        }
+
+        function configurazioneModalita(className, mode) {
+            const nome = normalizzaEtichettaClasse(className);
+            const voce =
+                foodPrototypeConfig &&
+                foodPrototypeConfig.classes &&
+                foodPrototypeConfig.classes[nome];
+
+            return voce && voce.modes
+                ? voce.modes[mode]
+                : null;
+        }
+
+        function sogliaPrototipoPerClasse(className) {
+            const valori = ["reale", "telefono"]
+                .map(mode => configurazioneModalita(className, mode))
+                .filter(Boolean)
+                .map(item => Number(item.threshold))
+                .filter(Number.isFinite);
+
+            return valori.length
+                ? Math.min(...valori)
+                : SOGLIA_SIMILARITA_PROTOTIPO_DEFAULT;
+        }
+
+        function marginePrototipoPerClasse(className) {
+            const valori = ["reale", "telefono"]
+                .map(mode => configurazioneModalita(className, mode))
+                .filter(Boolean)
+                .map(item => Number(item.margin))
+                .filter(Number.isFinite);
+
+            return valori.length
+                ? Math.min(...valori)
+                : MARGINE_PROTOTIPI_DEFAULT;
+        }
+
+        function mediaTopK(valori, k = 3) {
+            const validi = valori
+                .filter(Number.isFinite)
+                .sort((a, b) => b - a)
+                .slice(0, Math.max(1, k));
+
+            if (validi.length === 0) {
+                return -1;
+            }
+
+            return validi.reduce((somma, valore) => somma + valore, 0) /
+                validi.length;
+        }
+
+        function punteggioEsemplari(embedding, exemplars) {
+            if (!embedding || !Array.isArray(exemplars)) {
+                return -1;
+            }
+
+            return mediaTopK(
+                exemplars.map(function(esempio) {
+                    const vettore = normalizzaVettore(esempio);
+                    return vettore
+                        ? similaritaCoseno(embedding, vettore)
+                        : -1;
+                }),
+                3
+            );
+        }
+
+        function creaRitaglioInternoCanvas(immagine, factor = 0.72) {
+            if (!immagine) {
+                return null;
+            }
+
+            const width = Number(immagine.width || immagine.videoWidth || 0);
+            const height = Number(immagine.height || immagine.videoHeight || 0);
+
+            if (!width || !height) {
+                return null;
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 224;
+            canvas.height = 224;
+            const ctx = canvas.getContext("2d");
+
+            const cropW = width * factor;
+            const cropH = height * factor;
+            const x = (width - cropW) / 2;
+            const y = (height - cropH) / 2;
+
+            ctx.drawImage(
+                immagine,
+                x, y, cropW, cropH,
+                0, 0, 224, 224
+            );
+
+            return canvas;
+        }
+
+        function valutaEmbeddingPerModalita(
+            embedding,
+            classNameProposto,
+            mode
+        ) {
+            const proposta = normalizzaEtichettaClasse(classNameProposto);
+            const modalitaProposta = configurazioneModalita(proposta, mode);
+
+            if (!modalitaProposta) {
+                return null;
+            }
+
+            const risultati = Object.keys(foodPrototypeConfig.classes)
+                .map(function(className) {
+                    const modalita = configurazioneModalita(className, mode);
+                    return {
+                        className,
+                        score: modalita
+                            ? punteggioEsemplari(
+                                embedding,
+                                modalita.exemplars
+                            )
+                            : -1
+                    };
+                })
+                .sort((a, b) => b.score - a.score);
+
+            const risultatoProposto = risultati.find(
+                item => item.className === proposta
+            );
+            const miglioreAltra = risultati.find(
+                item => item.className !== proposta
+            ) || { className: "", score: -1 };
+
+            const score = risultatoProposto
+                ? risultatoProposto.score
+                : -1;
+            const margine = score - miglioreAltra.score;
+            const sogliaGenerata = Number(modalitaProposta.threshold);
+            const margineGenerato = Number(modalitaProposta.margin);
+
+            const sogliaOperativa =
+                mode === "telefono"
+                    ? SOGLIA_OPERATIVA_PROTOTIPO_TELEFONO
+                    : SOGLIA_OPERATIVA_PROTOTIPO_REALE;
+
+            const sogliaEffettiva = Math.min(
+                sogliaGenerata,
+                sogliaOperativa
+            );
+
+            const margineEffettivo = Math.min(
+                margineGenerato,
+                MARGINE_OPERATIVO_PROTOTIPO
+            );
+
+            const classePiuVicinaCorretta = Boolean(
+                risultati[0] &&
+                risultati[0].className === proposta
+            );
+
+            const superaRegolaGenerata = Boolean(
+                score >= sogliaGenerata &&
+                margine >= margineGenerato
+            );
+
+            const superaRegolaOperativa = Boolean(
+                score >= sogliaEffettiva &&
+                margine >= margineEffettivo
+            );
+
+            return {
+                mode,
+                className: proposta,
+                score,
+                margine,
+                soglia: sogliaEffettiva,
+                margineMinimo: margineEffettivo,
+                sogliaGenerata,
+                margineGenerato,
+                classeAlternativa: miglioreAltra.className,
+                scoreAlternativa: miglioreAltra.score,
+                accettato: Boolean(
+                    classePiuVicinaCorretta &&
+                    (
+                        superaRegolaGenerata ||
+                        superaRegolaOperativa
+                    )
+                )
+            };
+        }
+
+        async function validaAlimentoConPrototipi(
+            immagine,
+            classNameProposto
+        ) {
+            if (
+                foodPrototypeStatus !== "caricato" ||
+                !prototipiValidi(foodPrototypeConfig)
+            ) {
+                return {
+                    disponibile: false,
+                    accettato: false,
+                    motivo: "calibrazione-v2-mancante",
+                    similarita: -1,
+                    margine: -1,
+                    classePiuVicina: ""
+                };
+            }
+
+            const immagineInterna = creaRitaglioInternoCanvas(
+                immagine,
+                Number(foodPrototypeConfig.phoneCropFactor) || 0.72
+            );
+
+            const embeddingReale = await estraiEmbeddingAlimento(immagine);
+            const embeddingTelefono = immagineInterna
+                ? await estraiEmbeddingAlimento(immagineInterna)
+                : null;
+
+            if (!embeddingReale && !embeddingTelefono) {
+                return {
+                    disponibile: true,
+                    accettato: false,
+                    motivo: "embedding-non-disponibile",
+                    similarita: -1,
+                    margine: -1,
+                    classePiuVicina: ""
+                };
+            }
+
+            const valutazioni = [];
+
+            if (embeddingReale) {
+                const reale = valutaEmbeddingPerModalita(
+                    embeddingReale,
+                    classNameProposto,
+                    "reale"
+                );
+                if (reale) valutazioni.push(reale);
+            }
+
+            if (embeddingTelefono) {
+                const telefono = valutaEmbeddingPerModalita(
+                    embeddingTelefono,
+                    classNameProposto,
+                    "telefono"
+                );
+                if (telefono) valutazioni.push(telefono);
+            }
+
+            valutazioni.sort(function(a, b) {
+                if (a.accettato !== b.accettato) {
+                    return a.accettato ? -1 : 1;
+                }
+                return b.score - a.score;
+            });
+
+            const migliore = valutazioni[0];
+            const accettato = Boolean(migliore && migliore.accettato);
+
+            return {
+                disponibile: true,
+                accettato,
+                motivo: accettato
+                    ? "esemplari-coerenti-" + migliore.mode
+                    : "fuori-distribuzione",
+                similarita: migliore ? migliore.score : -1,
+                margine: migliore ? migliore.margine : -1,
+                soglia: migliore ? migliore.soglia : -1,
+                margineMinimo: migliore ? migliore.margineMinimo : -1,
+                modalita: migliore ? migliore.mode : "",
+                classePiuVicina: migliore
+                    ? migliore.classeAlternativa
+                    : "",
+                similaritaMigliore: migliore ? migliore.score : -1
+            };
+        }
+
+        function trovaBoxSchermoTelefono(
+            predictions,
+            boxOrigine,
+            canvasWidth,
+            canvasHeight
+        ) {
+            if (
+                !Array.isArray(predictions) ||
+                !boxOrigine ||
+                !canvasWidth ||
+                !canvasHeight
+            ) {
+                return null;
+            }
+
+            const areaCanvas = Math.max(
+                canvasWidth * canvasHeight,
+                1
+            );
+
+            const telefoni = predictions
+                .filter(function(prediction) {
+                    const nome = String(
+                        prediction.class || ""
+                    ).toLowerCase();
+
+                    if (
+                        nome !== "cell phone" ||
+                        prediction.score < SOGLIA_TELEFONO_COCO ||
+                        !Array.isArray(prediction.bbox)
+                    ) {
+                        return false;
+                    }
+
+                    const area =
+                        Math.max(prediction.bbox[2], 0) *
+                        Math.max(prediction.bbox[3], 0);
+
+                    return area / areaCanvas >= AREA_MINIMA_TELEFONO;
+                })
+                .sort(function(a, b) {
+                    const areaA =
+                        a.bbox[2] * a.bbox[3];
+                    const areaB =
+                        b.bbox[2] * b.bbox[3];
+
+                    return (
+                        b.score * areaB -
+                        a.score * areaA
+                    );
+                });
+
+            if (telefoni.length === 0) {
+                return null;
+            }
+
+            const telefono = telefoni[0];
+            const bbox = telefono.bbox;
+            const scalaX = boxOrigine.w / canvasWidth;
+            const scalaY = boxOrigine.h / canvasHeight;
+
+            let x = boxOrigine.x + bbox[0] * scalaX;
+            let y = boxOrigine.y + bbox[1] * scalaY;
+            let w = bbox[2] * scalaX;
+            let h = bbox[3] * scalaY;
+
+            const riduzioneX = w * RIDUZIONE_BORDO_SCHERMO_X;
+            const riduzioneY = h * RIDUZIONE_BORDO_SCHERMO_Y;
+
+            x += riduzioneX;
+            y += riduzioneY;
+            w -= riduzioneX * 2;
+            h -= riduzioneY * 2;
+
+            if (w < 80 || h < 80) {
+                return null;
+            }
+
+            x = Math.max(0, x);
+            y = Math.max(0, y);
+            w = Math.min(w, video.videoWidth - x);
+            h = Math.min(h, video.videoHeight - y);
+
+            return {
+                x: x,
+                y: y,
+                w: w,
+                h: h,
+                score: telefono.score
+            };
+        }
+
+        function ritagliaBoxVideoPerEmbedding(box) {
+            if (!box || !video) {
+                return null;
+            }
+
+            const x = Math.max(0, box.x || 0);
+            const y = Math.max(0, box.y || 0);
+            const w = Math.min(
+                Math.max(1, box.w || 1),
+                Math.max(1, video.videoWidth - x)
+            );
+            const h = Math.min(
+                Math.max(1, box.h || 1),
+                Math.max(1, video.videoHeight - y)
+            );
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 224;
+            canvas.height = 224;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, x, y, w, h, 0, 0, 224, 224);
+            return canvas;
+        }
+
         function classeSfondoTM(className) {
             const nome = String(className || "").trim().toLowerCase();
 
@@ -1955,59 +2892,232 @@
 
         async function trovaMiglioreAlimentoCustom(
             immagineAlimento,
-            boxCentrale
+            boxCentrale,
+            immaginiAggiuntive = []
         ) {
 
             if (!customFoodModel) {
                 return null;
             }
 
-            const prediction = await customFoodModel.predict(immagineAlimento);
-            const ordinate = [...prediction].sort(
-                (a, b) => b.probability - a.probability
+            const varianti = [];
+
+            function aggiungiVariante(nome, immagine) {
+                if (immagine) {
+                    varianti.push({ nome, immagine });
+                }
+            }
+
+            aggiungiVariante("centrale-50", immagineAlimento);
+            aggiungiVariante(
+                "centrale-42",
+                creaRitaglioInternoCanvas(immagineAlimento, 0.84)
+            );
+            aggiungiVariante(
+                "centrale-34",
+                creaRitaglioInternoCanvas(immagineAlimento, 0.68)
             );
 
-            if (ordinate.length === 0) {
+            immaginiAggiuntive.slice(0, 1).forEach(function(immagine, indice) {
+                aggiungiVariante("schermo-" + indice, immagine);
+                aggiungiVariante(
+                    "schermo-interno-" + indice,
+                    creaRitaglioInternoCanvas(immagine, 0.76)
+                );
+            });
+
+            const statistiche = Object.create(null);
+            const diagnostica = [];
+
+            for (const variante of varianti) {
+                const prediction = await customFoodModel.predict(
+                    variante.immagine
+                );
+
+                const ordinate = [...prediction].sort(
+                    (a, b) => b.probability - a.probability
+                );
+
+                if (ordinate.length === 0) {
+                    continue;
+                }
+
+                const top = ordinate[0];
+                const topName = normalizzaEtichettaClasse(top.className);
+
+                diagnostica.push({
+                    ritaglio: variante.nome,
+                    primaClasse: top.className,
+                    probabilita: Number(top.probability.toFixed(3))
+                });
+
+                for (const item of ordinate) {
+                    const nome = normalizzaEtichettaClasse(item.className);
+
+                    if (!customFoodClasses.includes(nome)) {
+                        continue;
+                    }
+
+                    if (!statistiche[nome]) {
+                        statistiche[nome] = {
+                            className: nome,
+                            sum: 0,
+                            max: 0,
+                            samples: 0,
+                            topWins: 0
+                        };
+                    }
+
+                    const voce = statistiche[nome];
+                    voce.sum += item.probability;
+                    voce.max = Math.max(voce.max, item.probability);
+                    voce.samples++;
+
+                    if (nome === topName) {
+                        voce.topWins++;
+                    }
+                }
+            }
+
+            console.log("Diagnostica TM multi-ritaglio:", diagnostica);
+
+            const classi = Object.values(statistiche)
+                .map(function(item) {
+                    const media = item.sum / Math.max(item.samples, 1);
+                    const score = media * 0.62 + item.max * 0.38;
+
+                    return {
+                        ...item,
+                        media,
+                        score
+                    };
+                })
+                .sort(function(a, b) {
+                    if (a.topWins !== b.topWins) {
+                        return b.topWins - a.topWins;
+                    }
+                    return b.score - a.score;
+                });
+
+            if (classi.length === 0) {
                 return null;
             }
 
-            const prima = ordinate[0];
-            const secondaProb =
-                ordinate.length > 1 ? ordinate[1].probability : 0;
-            const className = prima.className.trim().toLowerCase();
+            const prima = classi[0];
+            const seconda = classi[1] || {
+                score: 0,
+                className: ""
+            };
 
-            /*
-                La prima classe assoluta deve essere davvero una classe
-                personalizzata valida. Non cerchiamo semplicemente la migliore
-                tra latte/uova/pane/yogurt, altrimenti il modello sarebbe costretto
-                a scegliere uno di questi anche quando vede una mela.
-            */
-            if (classeSfondoTM(className)) {
-                return {
-                    className: className,
-                    confidence: prima.probability,
-                    secondConfidence: secondaProb,
-                    margin: prima.probability - secondaProb,
-                    source: "teachable",
-                    isBackground: true,
-                    box: boxCentrale
-                };
-            }
+            const accordoSufficiente = Boolean(
+                prima.topWins >= ACCORDO_MINIMO_RITAGLI_TM ||
+                (
+                    prima.max >= 0.94 &&
+                    prima.media >= 0.58
+                )
+            );
 
-            if (!customFoodClasses.includes(className)) {
+            if (!accordoSufficiente) {
+                console.log(
+                    "TM rifiutato per mancato accordo tra ritagli:",
+                    classi
+                );
                 return null;
             }
 
             return {
-                className: className,
-                confidence: prima.probability,
-                secondConfidence: secondaProb,
-                margin: prima.probability - secondaProb,
+                className: prima.className,
+                confidence: prima.score,
+                secondConfidence: seconda.score,
+                margin: prima.score - seconda.score,
                 source: "teachable",
                 isBackground: false,
+                cropAgreement: prima.topWins,
+                cropCount: varianti.length,
                 box: boxCentrale
             };
+        }
 
+        function etichettaMobileNetDaBloccare(etichetta) {
+            const testo = String(etichetta || "").toLowerCase();
+
+            const neutrali = [
+                "cellular telephone", "cell phone", "mobile phone",
+                "screen", "monitor", "web site", "website",
+                "bottle", "carton", "packet", "jar", "cup",
+                "bowl", "plate", "container", "grocery"
+            ];
+
+            if (neutrali.some(termine => testo.includes(termine))) {
+                return false;
+            }
+
+            return TERMINI_VETO_MOBILENET.some(
+                termine => testo.includes(termine)
+            );
+        }
+
+        async function trovaVetoNonAlimentareMobileNet(
+            immagini,
+            candidatoTm
+        ) {
+            if (!genericObjectModel) {
+                return null;
+            }
+
+            const candidati = [];
+
+            for (const immagine of immagini.filter(Boolean).slice(0, 3)) {
+                try {
+                    const risultati = await genericObjectModel.classify(
+                        immagine,
+                        5
+                    );
+
+                    for (const risultato of risultati) {
+                        const etichetta = String(
+                            risultato.className || ""
+                        );
+                        const score = Number(
+                            risultato.probability || 0
+                        );
+                        const lower = etichetta.toLowerCase();
+
+                        if (
+                            candidatoTm &&
+                            candidatoTm.className === "uova" &&
+                            (
+                                lower.includes("ping-pong") ||
+                                lower.includes("golf ball")
+                            )
+                        ) {
+                            continue;
+                        }
+
+                        if (
+                            score >= SOGLIA_VETO_MOBILENET &&
+                            etichettaMobileNetDaBloccare(etichetta)
+                        ) {
+                            candidati.push({
+                                className: "mobilenet:" + etichetta,
+                                score,
+                                bbox: [0, 0, 1, 1],
+                                areaRelativa: 1,
+                                forte: true,
+                                source: "mobilenet"
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.warn(
+                        "Controllo MobileNet non disponibile per un frame:",
+                        error
+                    );
+                }
+            }
+
+            candidati.sort((a, b) => b.score - a.score);
+            return candidati[0] || null;
         }
 
         function aggiornaMemoriaCoco(alimentoCoco) {
@@ -2039,19 +3149,12 @@
             return ultimoSegnaleCoco;
         }
 
-        function puoPrevalerePaneSuCoco(alimentoCoco, alimentoCustom) {
-            return Boolean(
-                alimentoCoco &&
-                alimentoCustom &&
-                !alimentoCustom.isBackground &&
-                alimentoCustom.className === "pane" &&
-                (
-                    alimentoCoco.className === "sandwich" ||
-                    alimentoCoco.className === "hot dog"
-                ) &&
-                alimentoCustom.confidence >= 0.94 &&
-                alimentoCustom.margin >= MARGINE_MINIMO_ALIMENTO_TM
-            );
+        function puoPrevalerePaneSuCoco() {
+            /*
+                Sandwich e hot dog non fanno più parte delle classi accettate.
+                Il pane viene riconosciuto esclusivamente da Teachable Machine.
+            */
+            return false;
         }
 
         function scegliAlimentoVisibile(alimentoCoco, alimentoCustom) {
@@ -2157,13 +3260,11 @@
                 } catch (error) {
                     console.error("Errore riconoscimento alimento:", error);
 
-                    document.getElementById("risultato-alimento").innerHTML =
-                        "Errore temporaneo nel riconoscimento alimento." +
-                        "<br><span class='small-text'>Riprovo automaticamente.</span>";
+                    terminaAnalisiAlimento(null, true);
                 }
             }
 
-            setTimeout(predict, 900);
+            setTimeout(predict, 350);
 
         }
 
@@ -2171,19 +3272,17 @@
 
             if (utenteBloccato) {
 
-                /*
-                    Quando stiamo analizzando il cibo, lasciamo libero l'overlay
-                    per il riquadro dell'alimento e non ridisegniamo il volto.
-                */
                 if (
-                    !riconoscimentoAlimentoAttivo &&
-                    ultimoBoxVolto !== null
+                    alimentoBloccato &&
+                    ultimoBoxAlimento
                 ) {
                     disegnaRettangolo(
-                        ultimoBoxVolto,
-                        utenteRiconosciuto,
-                        "#2563eb"
+                        ultimoBoxAlimento,
+                        nomeAlimento(ultimoAlimentoRilevato),
+                        "#16a34a"
                     );
+                } else if (!riconoscimentoAlimentoAttivo) {
+                    pulisciOverlay();
                 }
 
                 return;
@@ -2308,7 +3407,21 @@
                     ultimoAlimentoRilevato = "";
                     azzeraCandidatoAlimento();
                     ultimoSegnaleCoco = null;
+                    analisiAlimentoCorrente = null;
                     mostraGuidaAlimento(false);
+
+                    /*
+                        In questo momento l'utente è appena stato riconosciuto
+                        e non ha ancora avviato l'analisi del prodotto:
+                        salviamo l'inquadratura di riferimento.
+                    */
+                    catturaFirmaAttesaAlimento();
+                    ultimoControlloVoltoAlimento = {
+                        timestamp: 0,
+                        presenteNelRiquadro: false,
+                        rapportoRiquadro: 0,
+                        rapportoVolto: 0
+                    };
 
                     const foodButton = document.getElementById("food-action-button");
                     if (foodButton) {
@@ -2317,8 +3430,9 @@
                     }
 
                     document.getElementById("risultato-alimento").innerHTML =
-                        "Utente riconosciuto. Il cibo non viene analizzato automaticamente." +
-                        "<br><span class='small-text'>Premi il pulsante quando hai il prodotto davanti alla webcam.</span>";
+                        "Utente riconosciuto. Ora puoi analizzare un alimento." +
+                        "<br><span class='small-text'>Metti un solo prodotto nel riquadro verde, tieni il volto fuori dal riquadro e premi <strong>Avvia riconoscimento alimento</strong>.</span>" +
+                        creaElencoAlimentiSupportati();
 
                     document.getElementById("risultato-database").innerHTML =
                         "Utente: " +
@@ -2352,6 +3466,13 @@
 
             utenteRiconosciuto = "";
             utenteBloccato = false;
+            firmaAttesaAlimento = null;
+            ultimoControlloVoltoAlimento = {
+                timestamp: 0,
+                presenteNelRiquadro: false,
+                rapportoRiquadro: 0,
+                rapportoVolto: 0
+            };
             ultimoBoxVolto = null;
 
             // Se si cambia utente, si azzera e si blocca anche il riconoscimento del cibo.
@@ -2364,6 +3485,7 @@
             tempoUltimoAlimentoVisibile = 0;
             azzeraCandidatoAlimento();
             ultimoSegnaleCoco = null;
+            analisiAlimentoCorrente = null;
             candidatoUtente = "";
             conteggioCandidatoUtente = 0;
             mostraGuidaAlimento(false);
@@ -2391,14 +3513,665 @@
 
         }
 
-        async function predictFood() {
+        function creaNuovaAnalisiAlimento() {
+            const adesso = Date.now();
 
+            return {
+                /*
+                    Non richiediamo più di togliere il prodotto dopo aver
+                    premuto il pulsante. L'analisi parte subito sull'oggetto
+                    già presente nel riquadro.
+                */
+                fase: "classificazione",
+                firmeBaseline: [],
+                firmaBaseline: Array.isArray(firmaAttesaAlimento)
+                    ? [...firmaAttesaAlimento]
+                    : null,
+                inizioClassificazione: adesso,
+                scadenza: adesso + DURATA_ANALISI_INTERNA_ALIMENTO,
+                frameTotali: 0,
+                frameConVariazione: 0,
+                framePersonaDominante: 0,
+                frameVoltoNelRiquadro: 0,
+                frameSenzaNuovoOggetto: 0,
+                frameTelefono: 0,
+                frameTmRifiutatoDaPrototipo: 0,
+                miglioreSimilaritaTmRifiutata: -1,
+                evidenze: Object.create(null),
+                vetoNonAlimentari: Object.create(null)
+            };
+        }
+
+        function estraiFirmaVisivaAlimento() {
+            const immagine = foodCropCtx.getImageData(0, 0, 224, 224).data;
+            const firma = [];
+            const passo = 14;
+
+            for (let y = 7; y < 224; y += passo) {
+                for (let x = 7; x < 224; x += passo) {
+                    const indice = (y * 224 + x) * 4;
+                    const grigio =
+                        immagine[indice] * 0.299 +
+                        immagine[indice + 1] * 0.587 +
+                        immagine[indice + 2] * 0.114;
+                    firma.push(grigio);
+                }
+            }
+
+            return firma;
+        }
+
+        function catturaFirmaAttesaAlimento() {
+            try {
+                if (
+                    !video ||
+                    !video.videoWidth ||
+                    !foodCropCtx
+                ) {
+                    firmaAttesaAlimento = null;
+                    return false;
+                }
+
+                const box = creaBoxAreaCentrale();
+                ritagliaAreaCentrale(box);
+                firmaAttesaAlimento =
+                    estraiFirmaVisivaAlimento();
+
+                console.log(
+                    "Firma di attesa alimento acquisita:",
+                    firmaAttesaAlimento.length
+                );
+                return true;
+            } catch (error) {
+                console.warn(
+                    "Impossibile acquisire la firma di attesa:",
+                    error
+                );
+                firmaAttesaAlimento = null;
+                return false;
+            }
+        }
+
+        function areaIntersezioneBox(boxA, boxB) {
+            if (!boxA || !boxB) {
+                return 0;
+            }
+
+            const sinistra = Math.max(boxA.x, boxB.x);
+            const alto = Math.max(boxA.y, boxB.y);
+            const destra = Math.min(
+                boxA.x + boxA.w,
+                boxB.x + boxB.w
+            );
+            const basso = Math.min(
+                boxA.y + boxA.h,
+                boxB.y + boxB.h
+            );
+
+            return (
+                Math.max(0, destra - sinistra) *
+                Math.max(0, basso - alto)
+            );
+        }
+
+        async function rilevaVoltoNelRiquadroAlimento(boxRiquadro) {
+            const adesso = Date.now();
+
+            if (
+                adesso -
+                    ultimoControlloVoltoAlimento.timestamp <
+                DURATA_CACHE_VOLTO_ALIMENTO
+            ) {
+                return ultimoControlloVoltoAlimento;
+            }
+
+            const stato = {
+                timestamp: adesso,
+                presenteNelRiquadro: false,
+                rapportoRiquadro: 0,
+                rapportoVolto: 0
+            };
+
+            try {
+                const faces = await faceModel.estimateFaces(
+                    video,
+                    false
+                );
+
+                if (!Array.isArray(faces)) {
+                    ultimoControlloVoltoAlimento = stato;
+                    return stato;
+                }
+
+                const areaRiquadro = Math.max(
+                    boxRiquadro.w * boxRiquadro.h,
+                    1
+                );
+
+                for (const face of faces) {
+                    const x1 = face.topLeft[0];
+                    const y1 = face.topLeft[1];
+                    const x2 = face.bottomRight[0];
+                    const y2 = face.bottomRight[1];
+
+                    const boxVolto = {
+                        x: x1,
+                        y: y1,
+                        w: Math.max(x2 - x1, 1),
+                        h: Math.max(y2 - y1, 1)
+                    };
+
+                    const intersezione =
+                        areaIntersezioneBox(
+                            boxRiquadro,
+                            boxVolto
+                        );
+                    const areaVolto = Math.max(
+                        boxVolto.w * boxVolto.h,
+                        1
+                    );
+
+                    const rapportoRiquadro =
+                        intersezione / areaRiquadro;
+                    const rapportoVolto =
+                        intersezione / areaVolto;
+
+                    stato.rapportoRiquadro = Math.max(
+                        stato.rapportoRiquadro,
+                        rapportoRiquadro
+                    );
+                    stato.rapportoVolto = Math.max(
+                        stato.rapportoVolto,
+                        rapportoVolto
+                    );
+                }
+
+                stato.presenteNelRiquadro = Boolean(
+                    stato.rapportoRiquadro >=
+                        SOGLIA_VOLTO_SU_RIQUADRO ||
+                    stato.rapportoVolto >=
+                        SOGLIA_VOLTO_INTERNO
+                );
+            } catch (error) {
+                console.warn(
+                    "Controllo volto durante analisi alimento non disponibile:",
+                    error
+                );
+            }
+
+            ultimoControlloVoltoAlimento = stato;
+            return stato;
+        }
+
+        function mediaFirmeVisive(firme) {
+            if (!firme || firme.length === 0) {
+                return null;
+            }
+
+            const media = new Array(firme[0].length).fill(0);
+
+            firme.forEach(function(firma) {
+                for (let i = 0; i < firma.length; i++) {
+                    media[i] += firma[i];
+                }
+            });
+
+            for (let i = 0; i < media.length; i++) {
+                media[i] /= firme.length;
+            }
+
+            return media;
+        }
+
+        function differenzaFirmeVisive(firmaA, firmaB) {
+            if (
+                !firmaA ||
+                !firmaB ||
+                firmaA.length === 0 ||
+                firmaA.length !== firmaB.length
+            ) {
+                return 0;
+            }
+
+            let differenza = 0;
+
+            for (let i = 0; i < firmaA.length; i++) {
+                differenza += Math.abs(firmaA[i] - firmaB[i]);
+            }
+
+            return differenza / firmaA.length / 255;
+        }
+
+        function personaDominanteNelRitaglio(predictions) {
+            if (!Array.isArray(predictions) || !foodDetectionCanvas) {
+                return false;
+            }
+
+            const areaCanvas = Math.max(
+                foodDetectionCanvas.width * foodDetectionCanvas.height,
+                1
+            );
+
+            return predictions.some(function(prediction) {
+                if (
+                    String(prediction.class || "").toLowerCase() !== "person" ||
+                    prediction.score < 0.45 ||
+                    !Array.isArray(prediction.bbox)
+                ) {
+                    return false;
+                }
+
+                const areaPersona =
+                    Math.max(prediction.bbox[2], 0) *
+                    Math.max(prediction.bbox[3], 0);
+
+                return areaPersona / areaCanvas >= SOGLIA_PERSONA_DOMINANTE;
+            });
+        }
+
+        function trovaVetoNonAlimentareCoco(
+            predictions,
+            alimentoCoco,
+            canvasWidth,
+            canvasHeight
+        ) {
+            if (
+                !Array.isArray(predictions) ||
+                !canvasWidth ||
+                !canvasHeight
+            ) {
+                return null;
+            }
+
+            const areaCanvas = Math.max(
+                canvasWidth * canvasHeight,
+                1
+            );
+            const confidenzaAlimento = alimentoCoco
+                ? Number(alimentoCoco.confidence || 0)
+                : 0;
+
+            const candidati = predictions
+                .map(function(prediction) {
+                    const className = String(
+                        prediction.class || ""
+                    ).toLowerCase();
+                    const bbox = Array.isArray(prediction.bbox)
+                        ? prediction.bbox
+                        : [0, 0, 0, 0];
+                    const areaRelativa =
+                        Math.max(bbox[2], 0) * Math.max(bbox[3], 0) /
+                        areaCanvas;
+
+                    return {
+                        className,
+                        score: Number(prediction.score || 0),
+                        bbox,
+                        areaRelativa,
+                        forte: COCO_CLASSI_VETO_FORTE.has(className)
+                    };
+                })
+                .filter(function(item) {
+                    if (
+                        !item.className ||
+                        foodClasses.includes(item.className) ||
+                        COCO_CLASSI_SUPPORTO.has(item.className) ||
+                        item.areaRelativa < AREA_MINIMA_VETO_COCO
+                    ) {
+                        return false;
+                    }
+
+                    if (item.forte) {
+                        return item.score >= SOGLIA_VETO_FORTE_COCO;
+                    }
+
+                    return (
+                        item.score >= SOGLIA_VETO_GENERICO_COCO &&
+                        item.score >= confidenzaAlimento - 0.03
+                    );
+                })
+                .sort(function(a, b) {
+                    return b.score - a.score;
+                });
+
+            return candidati[0] || null;
+        }
+
+        function registraVetoNonAlimentare(veto) {
+            if (!analisiAlimentoCorrente || !veto) {
+                return;
+            }
+
+            const chiave = veto.className;
+            const precedente =
+                analisiAlimentoCorrente.vetoNonAlimentari[chiave] || {
+                    className: veto.className,
+                    count: 0,
+                    sommaConfidenza: 0,
+                    confidenzaMassima: 0
+                };
+
+            precedente.count++;
+            precedente.sommaConfidenza += veto.score || 0;
+            precedente.confidenzaMassima = Math.max(
+                precedente.confidenzaMassima,
+                veto.score || 0
+            );
+            analisiAlimentoCorrente.vetoNonAlimentari[chiave] = precedente;
+        }
+
+        function miglioreVetoNonAlimentare() {
+            if (!analisiAlimentoCorrente) {
+                return null;
+            }
+
+            const veto = Object.values(
+                analisiAlimentoCorrente.vetoNonAlimentari || {}
+            ).map(function(item) {
+                return {
+                    ...item,
+                    confidenzaMedia:
+                        item.sommaConfidenza / Math.max(item.count, 1)
+                };
+            }).filter(function(item) {
+                const isMobileNet =
+                    String(item.className || "")
+                        .startsWith("mobilenet:");
+
+                const evidenzeRichieste = isMobileNet
+                    ? EVIDENZE_MINIME_VETO_MOBILENET
+                    : EVIDENZE_MINIME_VETO_COCO;
+
+                const sogliaRichiesta = isMobileNet
+                    ? SOGLIA_VETO_MOBILENET
+                    : 0;
+
+                return (
+                    item.count >= evidenzeRichieste &&
+                    item.confidenzaMedia >= sogliaRichiesta
+                );
+            });
+
+            veto.sort(function(a, b) {
+                if (a.count !== b.count) {
+                    return b.count - a.count;
+                }
+                return b.confidenzaMedia - a.confidenzaMedia;
+            });
+
+            return veto[0] || null;
+        }
+
+        function registraEvidenzaAlimento(alimento) {
+            if (!analisiAlimentoCorrente || !alimento) {
+                return;
+            }
+
+            const chiave = alimento.source + ":" + alimento.className;
+            let evidenza = analisiAlimentoCorrente.evidenze[chiave];
+
+            if (!evidenza) {
+                evidenza = {
+                    source: alimento.source,
+                    className: alimento.className,
+                    count: 0,
+                    sommaConfidenza: 0,
+                    sommaMargine: 0,
+                    sommaSimilaritaPrototipo: 0,
+                    sommaMarginePrototipo: 0,
+                    confidenzaMassima: 0,
+                    box: alimento.box
+                };
+                analisiAlimentoCorrente.evidenze[chiave] = evidenza;
+            }
+
+            evidenza.count++;
+            evidenza.sommaConfidenza += alimento.confidence || 0;
+            evidenza.sommaMargine += alimento.margin || 0;
+            evidenza.sommaSimilaritaPrototipo +=
+                alimento.prototypeSimilarity || 0;
+            evidenza.sommaMarginePrototipo +=
+                alimento.prototypeMargin || 0;
+            evidenza.confidenzaMassima = Math.max(
+                evidenza.confidenzaMassima,
+                alimento.confidence || 0
+            );
+            evidenza.box = alimento.box || evidenza.box;
+        }
+
+        function completaStatisticheEvidenza(evidenza) {
+            return {
+                ...evidenza,
+                confidenzaMedia:
+                    evidenza.sommaConfidenza / Math.max(evidenza.count, 1),
+                margineMedio:
+                    evidenza.sommaMargine / Math.max(evidenza.count, 1),
+                similaritaPrototipoMedia:
+                    evidenza.sommaSimilaritaPrototipo /
+                    Math.max(evidenza.count, 1),
+                marginePrototipoMedio:
+                    evidenza.sommaMarginePrototipo /
+                    Math.max(evidenza.count, 1)
+            };
+        }
+
+        function miglioreEvidenzaPerFonte(source) {
+            if (!analisiAlimentoCorrente) {
+                return null;
+            }
+
+            const valide = Object.values(analisiAlimentoCorrente.evidenze)
+                .filter(function(evidenza) {
+                    return evidenza.source === source;
+                })
+                .map(completaStatisticheEvidenza)
+                .filter(function(evidenza) {
+                    if (source === "coco") {
+                        return (
+                            evidenza.count >= EVIDENZE_MINIME_COCO &&
+                            evidenza.confidenzaMedia >= SOGLIA_INTERNA_COCO
+                        );
+                    }
+
+                    /*
+                        Ogni frame Teachable Machine viene già validato da
+                        validaAlimentoConPrototipi(). Qui non dobbiamo applicare
+                        una seconda volta le vecchie soglie generate, altrimenti
+                        un alimento corretto viene accettato nel singolo frame e
+                        poi rifiutato alla decisione finale.
+                    */
+                    return (
+                        /*
+                            I singoli frame sono già stati validati con:
+                            - classe prototipo più vicina;
+                            - similarità;
+                            - margine tra prototipi.
+                            Qui verifichiamo soltanto stabilità temporale e
+                            qualità della previsione Teachable Machine.
+                        */
+                        evidenza.count >= EVIDENZE_MINIME_TM &&
+                        evidenza.confidenzaMedia >= SOGLIA_INTERNA_TM &&
+                        evidenza.margineMedio >= MARGINE_INTERNO_TM
+                    );
+                });
+
+            valide.sort(function(a, b) {
+                const punteggioA =
+                    a.confidenzaMedia + Math.min(a.count, 5) * 0.02;
+                const punteggioB =
+                    b.confidenzaMedia + Math.min(b.count, 5) * 0.02;
+                return punteggioB - punteggioA;
+            });
+
+            return valide[0] || null;
+        }
+
+        function scegliRisultatoInternoFinale() {
+            const coco = miglioreEvidenzaPerFonte("coco");
+            const teachable = miglioreEvidenzaPerFonte("teachable");
+            const vetoNonAlimentare = miglioreVetoNonAlimentare();
+
+            if (!coco && !teachable) {
+                return null;
+            }
+
+            if (!coco) {
+                return teachable;
+            }
+
+            if (!teachable) {
+                return coco;
+            }
+
+            /*
+                Alcune forme vengono confuse spesso da COCO. In questi casi
+                il classificatore personalizzato può prevalere se è stabile.
+            */
+            if (
+                teachable.className === "uova" &&
+                ["orange", "cake", "donut"].includes(coco.className) &&
+                teachable.confidenzaMedia >= 0.86
+            ) {
+                return teachable;
+            }
+
+            /*
+                Una classe alimentare COCO confermata su più frame prevale sul
+                veto generico. Il veto resta utile quando COCO non vede alcun
+                alimento e Teachable Machine tenta di forzare una delle sue
+                quattro classi.
+            */
+            if (coco) {
+                return coco;
+            }
+
+            if (vetoNonAlimentare) {
+                console.log(
+                    "Oggetto rifiutato dal veto generale:",
+                    vetoNonAlimentare
+                );
+                return null;
+            }
+
+            return teachable || null;
+        }
+
+        function terminaAnalisiAlimento(risultato, errore = false) {
+            riconoscimentoAlimentoAttivo = false;
+            mostraGuidaAlimento(false);
+            pulisciOverlay();
+
+            const foodButton = document.getElementById("food-action-button");
+
+            if (!risultato) {
+                const analisiConclusa = analisiAlimentoCorrente;
+                const voltoNelRiquadro = Boolean(
+                    analisiConclusa &&
+                    analisiConclusa.frameVoltoNelRiquadro >= 2
+                );
+                const nessunNuovoOggetto = Boolean(
+                    analisiConclusa &&
+                    analisiConclusa.frameConVariazione <
+                        EVIDENZE_MINIME_TM
+                );
+
+                ultimoAlimentoRilevato = "";
+                alimentoBloccato = false;
+                ultimoBoxAlimento = null;
+                ultimaConfidenzaAlimento = 0;
+
+                if (foodButton) {
+                    foodButton.disabled = false;
+                    foodButton.textContent = "Prova un altro alimento";
+                }
+
+                const titoloRifiuto = errore
+                    ? "Analisi non completata"
+                    : (
+                        voltoNelRiquadro
+                            ? "Nessun alimento rilevato"
+                            : "Oggetto non presente tra gli alimenti disponibili"
+                    );
+
+                const motivoRifiuto = errore
+                    ? "Si è verificato un errore temporaneo. Premi il pulsante per riprovare."
+                    : (
+                        voltoNelRiquadro
+                            ? "Il volto occupava il riquadro dell’alimento. Sposta il viso lateralmente e mostra soltanto il prodotto."
+                            : (
+                                nessunNuovoOggetto
+                                    ? "Non è comparso un nuovo oggetto rispetto all’inquadratura iniziale."
+                                    : "Nessuna delle classi disponibili è risultata sufficientemente stabile."
+                            )
+                    );
+
+                document.getElementById("risultato-alimento").innerHTML =
+                    "<div class='food-locked'>" +
+                    titoloRifiuto +
+                    "<br><span class='small-text'>" +
+                    motivoRifiuto +
+                    "</span></div>";
+
+                document.getElementById("risultato-database").innerHTML =
+                    "Utente: " +
+                    escapeHTML(utenteRiconosciuto) +
+                    "<br><span class='small-text'>Nessun alimento disponibile selezionato.</span>";
+
+                analisiAlimentoCorrente = null;
+                azzeraCandidatoAlimento();
+                ultimoSegnaleCoco = null;
+                aggiornaAzioniContestuali();
+                return;
+            }
+
+            ultimoAlimentoRilevato = risultato.className;
+            alimentoBloccato = true;
+            ultimoBoxAlimento = risultato.box || creaBoxAreaCentrale();
+            ultimaConfidenzaAlimento = risultato.confidenzaMedia;
+            alimentoVisibileTemporaneo = {
+                className: risultato.className,
+                confidence: risultato.confidenzaMedia,
+                source: risultato.source,
+                box: ultimoBoxAlimento
+            };
+            tempoUltimoAlimentoVisibile = Date.now();
+
+            if (foodButton) {
+                foodButton.disabled = false;
+                foodButton.textContent = "Riconosci un altro alimento";
+            }
+
+            disegnaRettangolo(
+                ultimoBoxAlimento,
+                nomeAlimento(risultato.className),
+                "#16a34a"
+            );
+
+            document.getElementById("risultato-alimento").innerHTML =
+                "<div class='food-detected'>" +
+                "Alimento riconosciuto: " +
+                nomeAlimento(risultato.className) +
+                "<br><span class='small-text'>Analisi completata; il riconoscimento visivo è ora in pausa.</span>" +
+                "<div class='allergen-alert'>" +
+                (allergenInfo[risultato.className] ||
+                    "Informazioni allergeni non disponibili.") +
+                "</div></div>";
+
+            analisiAlimentoCorrente = null;
+            azzeraCandidatoAlimento();
+            ultimoSegnaleCoco = null;
+            aggiornaAzioniContestuali();
+            controllaCompatibilitaAutomatica();
+        }
+
+        async function predictFood() {
             if (!foodModel || !customFoodModel) {
                 return;
             }
 
             if (!utenteBloccato || utenteRiconosciuto === "") {
                 riconoscimentoAlimentoAttivo = false;
+                analisiAlimentoCorrente = null;
 
                 document.getElementById("risultato-alimento").innerHTML =
                     "Riconoscimento alimento bloccato" +
@@ -2410,196 +4183,421 @@
                 return;
             }
 
-            /*
-                Entrambi i modelli ricevono ESATTAMENTE lo stesso ritaglio.
-                In precedenza COCO analizzava tutta la webcam e TM soltanto il
-                centro: questa differenza era una delle fonti principali di errore.
-            */
+            if (!analisiAlimentoCorrente) {
+                analisiAlimentoCorrente = creaNuovaAnalisiAlimento();
+            }
+
             const boxCentrale = creaBoxAreaCentrale();
-            const ritagliAlimento = ritagliaAreaCentrale(boxCentrale);
+            const ritagliCentrali =
+                ritagliaAreaCentrale(boxCentrale);
+            const firmaCentrale =
+                estraiFirmaVisivaAlimento();
 
-            const predictionsCoco = await foodModel.detect(
-                ritagliAlimento.coco,
-                10,
-                0.30
-            );
-
-            const miglioreCoco = trovaMiglioreAlimentoCoco(
-                predictionsCoco,
-                boxCentrale
-            );
-            aggiornaMemoriaCoco(miglioreCoco);
-
-            const miglioreCustom = await trovaMiglioreAlimentoCustom(
-                ritagliAlimento.teachable,
-                boxCentrale
-            );
-
-            const miglioreAlimentoVisibile = scegliAlimentoVisibile(
-                miglioreCoco,
-                miglioreCustom
-            );
-
-            if (!miglioreAlimentoVisibile) {
-                azzeraCandidatoAlimento();
+            /*
+                Prima memorizziamo per un istante il riquadro senza prodotto.
+                Questo evita che volto e stanza vengano continuamente
+                trasformati in una delle classi Teachable Machine.
+            */
+            if (analisiAlimentoCorrente.fase === "baseline") {
+                analisiAlimentoCorrente.firmeBaseline.push(
+                    firmaCentrale
+                );
                 pulisciOverlay();
 
-                let dettaglio =
-                    "Mantieni un solo prodotto fermo e completamente dentro il riquadro centrale.";
-
-                if (miglioreCustom && miglioreCustom.isBackground) {
-                    dettaglio =
-                        "Il modello personalizzato vede sfondo/altro: avvicina il prodotto e riempi meglio il riquadro.";
-                } else if (segnaleCocoRecente()) {
-                    dettaglio =
-                        "COCO ha rilevato recentemente una sua classe: attendo altri frame prima di permettere a Teachable Machine di decidere.";
-                }
-
                 document.getElementById("risultato-alimento").innerHTML =
-                    "Nessun alimento riconosciuto con sicurezza" +
-                    "<br><span class='small-text'>" + dettaglio + "</span>" +
-                    "<br><span class='small-text'>Non spostare rapidamente il prodotto e non mostrare più alimenti insieme.</span>";
+                    "Preparazione dell’analisi…" +
+                    "<br><span class='small-text'>Mantieni il prodotto fermo nel riquadro verde.</span>";
+
+                if (
+                    analisiAlimentoCorrente.firmeBaseline.length >=
+                    NUMERO_FIRME_BASELINE
+                ) {
+                    analisiAlimentoCorrente.firmaBaseline =
+                        mediaFirmeVisive(
+                            analisiAlimentoCorrente.firmeBaseline
+                        );
+                    analisiAlimentoCorrente.fase =
+                        "classificazione";
+                    analisiAlimentoCorrente.inizioClassificazione =
+                        Date.now();
+                    analisiAlimentoCorrente.scadenza =
+                        Date.now() +
+                        DURATA_ANALISI_INTERNA_ALIMENTO;
+
+                    document.getElementById(
+                        "risultato-alimento"
+                    ).innerHTML =
+                        "Analisi interna dell’oggetto in corso…" +
+                        "<br><span class='small-text'>Ora mostra un solo prodotto, reale oppure tramite foto sul telefono.</span>";
+                }
 
                 return;
             }
 
-            const eCoco = miglioreAlimentoVisibile.source === "coco";
-            const sogliaCorretta = eCoco
-                ? SOGLIA_BLOCCO_ALIMENTO_COCO
-                : SOGLIA_BLOCCO_ALIMENTO_TM;
-
-            const margineValido =
-                eCoco ||
-                miglioreAlimentoVisibile.margin >=
-                    MARGINE_MINIMO_ALIMENTO_TM;
-
-            const previsioneForte =
-                miglioreAlimentoVisibile.confidence >= sogliaCorretta &&
-                margineValido;
-
-            disegnaRettangolo(
-                miglioreAlimentoVisibile.box,
-                nomeAlimento(miglioreAlimentoVisibile.className) +
-                    " " +
-                    (miglioreAlimentoVisibile.confidence * 100).toFixed(1) +
-                    "%",
-                previsioneForte ? "#16a34a" : "#f59e0b"
-            );
-
-            if (!previsioneForte) {
-                azzeraCandidatoAlimento();
-
-                let motivo =
-                    "Confidenza richiesta: " +
-                    (sogliaCorretta * 100).toFixed(0) +
-                    "%";
-
-                if (!eCoco) {
-                    motivo +=
-                        " · margine richiesto: " +
-                        (MARGINE_MINIMO_ALIMENTO_TM * 100).toFixed(0) +
-                        "% · margine attuale: " +
-                        (miglioreAlimentoVisibile.margin * 100).toFixed(1) +
-                        "%";
-                }
-
-                document.getElementById("risultato-alimento").innerHTML =
-                    "Possibile alimento: " +
-                    nomeAlimento(miglioreAlimentoVisibile.className) +
-                    "<br><span class='small-text'>Modello: " +
-                    (eCoco ? "COCO-SSD" : "Teachable Machine") +
-                    " · confidenza: " +
-                    (miglioreAlimentoVisibile.confidence * 100).toFixed(1) +
-                    "%</span>" +
-                    "<br><span class='small-text'>Risultato non ancora abbastanza affidabile. " +
-                    motivo +
-                    ".</span>";
-
+            if (Date.now() >= analisiAlimentoCorrente.scadenza) {
+                terminaAnalisiAlimento(
+                    scegliRisultatoInternoFinale()
+                );
                 return;
             }
 
-            const statoCandidato = aggiornaCandidatoAlimento(
-                miglioreAlimentoVisibile
-            );
-
-            document.getElementById("risultato-alimento").innerHTML =
-                "Verifica alimento in corso: " +
-                nomeAlimento(miglioreAlimentoVisibile.className) +
-                "<br><span class='small-text'>Modello: " +
-                (eCoco ? "COCO-SSD" : "Teachable Machine") +
-                " · confidenza: " +
-                (miglioreAlimentoVisibile.confidence * 100).toFixed(1) +
-                "% · conferme " +
-                statoCandidato.conteggio +
-                "/" +
-                statoCandidato.richiesti +
-                "</span>" +
-                (
-                    eCoco
-                        ? ""
-                        : "<br><span class='small-text'>Distacco dalla seconda classe: " +
-                          (miglioreAlimentoVisibile.margin * 100).toFixed(1) +
-                          "%</span>"
+            const differenzaDalloSfondo =
+                differenzaFirmeVisive(
+                    firmaCentrale,
+                    analisiAlimentoCorrente.firmaBaseline
                 );
 
-            if (
-                statoCandidato.conteggio < statoCandidato.richiesti
-            ) {
-                return;
-            }
+            /*
+                Analizziamo sempre direttamente l'area verde centrale.
+                Il prodotto può essere reale oppure mostrato come fotografia
+                sul telefono: la calibrazione contiene esempi di entrambe le
+                modalità. Non dipendiamo dal riconoscimento della classe
+                “cell phone”, che può fallire quando il telefono è ruotato,
+                molto vicino o occupa quasi tutta l'inquadratura.
+            */
+            const boxSchermo = null;
+            const boxAnalisi = boxCentrale;
+            const ritagliAnalisi = ritagliCentrali;
+            /*
+                COCO viene eseguito su tre sorgenti:
+                1) fotogramma completo;
+                2) riquadro centrale;
+                3) contenuto dello schermo, se il telefono viene rilevato.
 
-            ultimoAlimentoRilevato = miglioreAlimentoVisibile.className;
-            alimentoBloccato = true;
-            riconoscimentoAlimentoAttivo = false;
-            ultimoBoxAlimento = miglioreAlimentoVisibile.box;
-            ultimaConfidenzaAlimento = statoCandidato.confidenzaMedia;
-            alimentoVisibileTemporaneo = miglioreAlimentoVisibile;
-            tempoUltimoAlimentoVisibile = Date.now();
-            mostraGuidaAlimento(false);
+                In precedenza la funzione telefono veniva chiamata senza le
+                dimensioni del canvas e restituiva sempre null.
+            */
+            const boxCompleto = {
+                x: 0,
+                y: 0,
+                w: video.videoWidth,
+                h: video.videoHeight
+            };
 
-            const foodButton = document.getElementById("food-action-button");
-            if (foodButton) {
-                foodButton.textContent = "Riconosci un altro alimento";
-            }
+            const [
+                predictionsCocoComplete,
+                predictionsCocoCentrali
+            ] = await Promise.all([
+                foodModel.detect(video, 30, 0.12),
+                foodModel.detect(ritagliAnalisi.coco, 25, 0.12)
+            ]);
 
-            disegnaRettangolo(
-                miglioreAlimentoVisibile.box,
-                nomeAlimento(miglioreAlimentoVisibile.className) +
-                    " " +
-                    (statoCandidato.confidenzaMedia * 100).toFixed(1) +
-                    "%",
-                "#16a34a"
+            const candidatoCocoCompleto =
+                trovaMiglioreAlimentoCoco(
+                    predictionsCocoComplete,
+                    boxCompleto,
+                    video.videoWidth,
+                    video.videoHeight,
+                    "completo"
+                );
+
+            const candidatoCocoCentrale =
+                trovaMiglioreAlimentoCoco(
+                    predictionsCocoCentrali,
+                    boxAnalisi,
+                    ritagliAnalisi.coco.width,
+                    ritagliAnalisi.coco.height,
+                    "centrale"
+                );
+
+            /*
+                Il telefono viene cercato sul fotogramma completo, non soltanto
+                nel riquadro centrale. Passiamo ora anche larghezza e altezza,
+                parametri che nella versione precedente mancavano.
+            */
+            const boxTelefono = trovaBoxSchermoTelefono(
+                predictionsCocoComplete,
+                boxCompleto,
+                video.videoWidth,
+                video.videoHeight
             );
 
-            document.getElementById("risultato-alimento").innerHTML =
-                "<div class='food-detected'>" +
-                "Alimento confermato: " +
-                nomeAlimento(miglioreAlimentoVisibile.className) +
-                "<br><span class='small-text'>Modello usato: " +
-                (eCoco ? "COCO-SSD" : "Teachable Machine") +
-                " · confidenza media: " +
-                (statoCandidato.confidenzaMedia * 100).toFixed(1) +
-                "%</span>" +
-                "<br><span class='small-text'>Confermato su " +
-                statoCandidato.richiesti +
-                " rilevamenti consecutivi; analisi visiva ora in pausa.</span>" +
-                "<div class='allergen-alert'>" +
-                (allergenInfo[miglioreAlimentoVisibile.className] ||
-                    "Informazioni allergeni non disponibili.") +
-                "</div>" +
-                "</div>";
+            const immagineSchermo = boxTelefono
+                ? ritagliaBoxVideoPerEmbedding(boxTelefono)
+                : null;
 
-            azzeraCandidatoAlimento();
-            ultimoSegnaleCoco = null;
-            aggiornaAzioniContestuali();
-            controllaCompatibilitaAutomatica();
+            let predictionsCocoSchermo = [];
+            let candidatoCocoSchermo = null;
 
+            if (immagineSchermo) {
+                predictionsCocoSchermo = await foodModel.detect(
+                    immagineSchermo,
+                    20,
+                    0.10
+                );
+
+                candidatoCocoSchermo =
+                    trovaMiglioreAlimentoCoco(
+                        predictionsCocoSchermo,
+                        boxTelefono,
+                        immagineSchermo.width,
+                        immagineSchermo.height,
+                        "schermo"
+                    );
+            }
+
+            const miglioreCoco =
+                scegliMiglioreCandidatoCoco([
+                    candidatoCocoSchermo,
+                    candidatoCocoCentrale,
+                    candidatoCocoCompleto
+                ]);
+
+            const miglioreCustom =
+                await trovaMiglioreAlimentoCustom(
+                    ritagliAnalisi.teachable,
+                    boxAnalisi,
+                    immagineSchermo ? [immagineSchermo] : []
+                );
+
+            /*
+                Un rilevamento alimentare COCO positivo non deve essere
+                annullato da MobileNet o da una categoria non alimentare
+                generica. Il veto viene cercato soltanto se COCO non ha trovato
+                nessuna delle classi alimentari supportate nel frame.
+            */
+            const vetoCoco = miglioreCoco
+                ? null
+                : trovaVetoNonAlimentareCoco(
+                    predictionsCocoComplete,
+                    miglioreCoco,
+                    video.videoWidth,
+                    video.videoHeight
+                );
+
+            let vetoMobileNet = null;
+
+            if (
+                !miglioreCoco &&
+                analisiAlimentoCorrente.frameTotali % 2 === 0
+            ) {
+                vetoMobileNet =
+                    await trovaVetoNonAlimentareMobileNet(
+                        [
+                            immagineSchermo,
+                            creaRitaglioInternoCanvas(
+                                ritagliAnalisi.teachable,
+                                0.68
+                            ),
+                            ritagliAnalisi.teachable
+                        ],
+                        miglioreCustom
+                    );
+            }
+
+            const vetoNonAlimentare = [
+                vetoCoco,
+                vetoMobileNet
+            ]
+                .filter(Boolean)
+                .sort((a, b) => b.score - a.score)[0] || null;
+
+            if (vetoNonAlimentare) {
+                registraVetoNonAlimentare(vetoNonAlimentare);
+            }
+
+            let cocoValidato = null;
+            let customValidato = null;
+
+            /*
+                COCO non viene calibrato: accettiamo soltanto una sua classe
+                alimentare stabile, con confidenza sufficiente e senza un veto
+                non alimentare più convincente.
+            */
+            if (
+                miglioreCoco &&
+                foodClasses.includes(miglioreCoco.className) &&
+                !vetoNonAlimentare
+            ) {
+                cocoValidato = {
+                    ...miglioreCoco,
+                    prototypeSimilarity: 0,
+                    prototypeMargin: 0,
+                    prototypeNearestClass: "",
+                    prototypeMode: "coco-nativo",
+                    prototypeThreshold: 0,
+                    prototypeMarginMin: 0
+                };
+            }
+
+            if (
+                miglioreCustom &&
+                customFoodClasses.includes(
+                    miglioreCustom.className
+                ) &&
+                !vetoNonAlimentare
+            ) {
+                customValidato = {
+                    ...miglioreCustom,
+                    prototypeSimilarity: 0,
+                    prototypeMargin: 0,
+                    prototypeNearestClass: "",
+                    prototypeMode: "multi-crop",
+                    prototypeThreshold: 0,
+                    prototypeMarginMin: 0
+                };
+            }
+
+            analisiAlimentoCorrente.frameTotali++;
+
+            const variazionePresente = Boolean(
+                analisiAlimentoCorrente.firmaBaseline
+                    ? differenzaDalloSfondo >=
+                        DIFFERENZA_MINIMA_NUOVO_OGGETTO
+                    : true
+            );
+
+            if (!variazionePresente) {
+                analisiAlimentoCorrente.frameSenzaNuovoOggetto++;
+            }
+
+            const statoVoltoAlimento =
+                await rilevaVoltoNelRiquadroAlimento(
+                    boxAnalisi
+                );
+
+            const supportoProdottoRilevato = Boolean(
+                boxTelefono ||
+                predictionsCocoComplete.some(function(prediction) {
+                    const nome = String(
+                        prediction.class || ""
+                    ).toLowerCase();
+
+                    return (
+                        [
+                            "bottle",
+                            "cup",
+                            "bowl"
+                        ].includes(nome) &&
+                        prediction.score >= 0.28
+                    );
+                })
+            );
+
+            const voltoBloccaTeachable = Boolean(
+                statoVoltoAlimento.presenteNelRiquadro &&
+                !supportoProdottoRilevato
+            );
+
+            if (voltoBloccaTeachable) {
+                analisiAlimentoCorrente.frameVoltoNelRiquadro++;
+            }
+
+            const personaDominante =
+                personaDominanteNelRitaglio(
+                    predictionsCocoCentrali
+                );
+
+            if (variazionePresente) {
+                analisiAlimentoCorrente.frameConVariazione++;
+            }
+
+            if (personaDominante) {
+                analisiAlimentoCorrente.framePersonaDominante++;
+            }
+
+            /*
+                COCO possiede già il concetto di background. Le sue classi
+                alimentari vengono accettate senza calibrazione aggiuntiva,
+                ma soltanto se stabili e non contraddette da un oggetto COCO
+                chiaramente non alimentare.
+            */
+            if (
+                cocoValidato &&
+                variazionePresente &&
+                cocoValidato.confidence >=
+                    SOGLIA_INTERNA_COCO
+            ) {
+                console.log("Evidenza COCO accettata:", {
+                    classe: cocoValidato.className,
+                    confidenza: Number(
+                        cocoValidato.confidence.toFixed(3)
+                    ),
+                    modalita: cocoValidato.cocoMode
+                });
+                registraEvidenzaAlimento(cocoValidato);
+            } else if (miglioreCoco) {
+                console.log("COCO visto ma sotto soglia:", {
+                    classe: miglioreCoco.className,
+                    confidenza: Number(
+                        miglioreCoco.confidence.toFixed(3)
+                    ),
+                    soglia: SOGLIA_INTERNA_COCO,
+                    modalita: miglioreCoco.cocoMode
+                });
+            }
+
+            /*
+                Le classi Teachable Machine vengono registrate soltanto dopo:
+                1) accordo della stessa classe su più ritagli;
+                2) probabilità e margine del classificatore;
+                3) assenza di un veto COCO/MobileNet;
+                4) conferma della stessa classe su più fotogrammi.
+            */
+            if (
+                customValidato &&
+                variazionePresente &&
+                !voltoBloccaTeachable &&
+                customValidato.confidence >=
+                    SOGLIA_INTERNA_TM &&
+                customValidato.margin >=
+                    MARGINE_INTERNO_TM
+            ) {
+                registraEvidenzaAlimento(customValidato);
+            } else if (customValidato) {
+                // DIAGNOSTICA: la predizione ha superato il filtro dei
+                // prototipi ma è stata scartata dal gate finale su
+                // confidenza/margine/persona dominante. Qui vedi i numeri
+                // esatti confrontati con le soglie richieste.
+                console.log(
+                    "Diagnostica TM: scartata dal gate finale (non dai prototipi)",
+                    {
+                        classe: customValidato.className,
+                        confidence: Number(customValidato.confidence.toFixed(3)),
+                        soglia_confidence_richiesta: SOGLIA_INTERNA_TM,
+                        margin: Number(customValidato.margin.toFixed(3)),
+                        margine_richiesto: MARGINE_INTERNO_TM,
+                        variazionePresente,
+                        differenzaDalloSfondo: Number(differenzaDalloSfondo.toFixed(3)),
+                        differenza_minima_richiesta: DIFFERENZA_MINIMA_DALLO_SFONDO,
+                        personaDominante,
+                        voltoBloccaTeachable,
+                        rapportoVoltoSulRiquadro: Number(
+                            statoVoltoAlimento.rapportoRiquadro.toFixed(3)
+                        ),
+                        rapportoVoltoInterno: Number(
+                            statoVoltoAlimento.rapportoVolto.toFixed(3)
+                        ),
+                        supportoProdottoRilevato,
+                        soglie_extra_se_persona_dominante: personaDominante
+                            ? {
+                                  confidence_richiesta: 0.92,
+                                  margine_richiesto: 0.22,
+                                  differenza_sfondo_richiesta: 0.11
+                              }
+                            : "non applicabile"
+                    }
+                );
+            }
+
+            pulisciOverlay();
+            document.getElementById(
+                "risultato-alimento"
+            ).innerHTML =
+                "Analisi interna dell’oggetto in corso…" +
+                "<br><span class='small-text'>Mantieni fermo il prodotto fino al termine; i risultati provvisori restano nascosti.</span>";
+
+            if (Date.now() >= analisiAlimentoCorrente.scadenza) {
+                terminaAnalisiAlimento(
+                    scegliRisultatoInternoFinale()
+                );
+            }
         }
 
         function resetAlimento() {
-
             if (!utenteBloccato || utenteRiconosciuto === "") {
                 riconoscimentoAlimentoAttivo = false;
+                analisiAlimentoCorrente = null;
 
                 document.getElementById("risultato-alimento").innerHTML =
                     "Riconoscimento alimento bloccato" +
@@ -2618,24 +4616,26 @@
             alimentoVisibileTemporaneo = null;
             tempoUltimoAlimentoVisibile = 0;
 
+            analisiAlimentoCorrente = creaNuovaAnalisiAlimento();
             riconoscimentoAlimentoAttivo = true;
             mostraGuidaAlimento(true);
 
             document.getElementById("risultato-database").innerHTML =
                 "Utente: " +
                 escapeHTML(utenteRiconosciuto) +
-                "<br><span class='small-text'>In attesa del nuovo alimento.</span>";
+                "<br><span class='small-text'>Analisi del nuovo oggetto in preparazione.</span>";
 
             aggiornaAzioniContestuali();
 
             const foodButton = document.getElementById("food-action-button");
             if (foodButton) {
-                foodButton.textContent = "Ricerca alimento in corso...";
+                foodButton.disabled = true;
+                foodButton.textContent = "Analisi in corso…";
             }
 
             document.getElementById("risultato-alimento").innerHTML =
-                "Riconoscimento avviato. Mostra un alimento al centro della webcam.";
-
+                "Analisi dell’oggetto in corso…" +
+                "<br><span class='small-text'>Mantieni il prodotto centrato nel riquadro verde. Non è necessario lasciare prima lo sfondo vuoto.</span>";
         }
 
         function formattaRispostaCompatibilita(rispostaOriginale) {

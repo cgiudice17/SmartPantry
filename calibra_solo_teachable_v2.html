@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calibrazione alimenti — Smart Pantry</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg: #0f172a;
+            --card: rgba(255,255,255,.97);
+            --text: #111827;
+            --muted: #64748b;
+            --green: #16a34a;
+            --blue: #2563eb;
+            --teal: #0f766e;
+            --red: #b91c1c;
+            --amber: #b45309;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(34,197,94,.38), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(37,99,235,.30), transparent 34%),
+                linear-gradient(135deg, #0f172a, #14532d);
+        }
+        .page {
+            width: min(1180px, 100%);
+            margin: auto;
+            padding: 28px 22px 44px;
+        }
+        header { color: white; text-align: center; margin-bottom: 22px; }
+        h1 { margin: 0; font-size: 38px; }
+        header p {
+            max-width: 820px;
+            margin: 10px auto 0;
+            color: #e2e8f0;
+            line-height: 1.55;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) minmax(360px,.9fr);
+            gap: 22px;
+            align-items: start;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 22px;
+            padding: 20px;
+            box-shadow: 0 20px 45px rgba(0,0,0,.24);
+        }
+        h2 { margin: 0 0 14px; font-size: 21px; }
+        .video-wrap {
+            position: relative;
+            overflow: hidden;
+            border-radius: 18px;
+            background: #111827;
+            border: 4px solid white;
+        }
+        video {
+            width: 100%;
+            display: block;
+            transform: scaleX(-1);
+        }
+        .guide {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 58%;
+            height: 58%;
+            transform: translate(-50%,-50%);
+            border: 4px dashed #22c55e;
+            border-radius: 20px;
+            pointer-events: none;
+            box-shadow: 0 0 0 9999px rgba(15,23,42,.12);
+        }
+        .guide span {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate(-50%,-50%);
+            white-space: nowrap;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #16a34a;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        button {
+            border: 0;
+            border-radius: 999px;
+            padding: 11px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(135deg, var(--green), #15803d);
+            box-shadow: 0 9px 18px rgba(22,163,74,.22);
+        }
+        button.secondary { background: linear-gradient(135deg, var(--blue), #1d4ed8); }
+        button.dark { background: linear-gradient(135deg, #475569, #334155); }
+        button.danger { background: linear-gradient(135deg, #dc2626, #991b1b); }
+        button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+        .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 15px; }
+        .status {
+            margin-top: 14px;
+            padding: 13px 14px;
+            border-radius: 15px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            line-height: 1.45;
+            min-height: 50px;
+        }
+        .classes { display: grid; gap: 11px; }
+        .class-card {
+            border: 1px solid #dbe4ee;
+            border-radius: 17px;
+            padding: 14px;
+            background: white;
+        }
+        .class-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .class-name { font-size: 17px; font-weight: bold; text-transform: capitalize; }
+        .count {
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .class-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+        .class-actions button { margin: 0; padding: 9px 12px; font-size: 12px; }
+        .hint {
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .footer-card { margin-top: 22px; }
+        .phone-inner-guide {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 42%;
+            height: 42%;
+            transform: translate(-50%, -50%);
+            border: 3px solid #f59e0b;
+            border-radius: 16px;
+            pointer-events: none;
+            z-index: 4;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.04);
+        }
+        .phone-inner-guide span {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, -50%);
+            background: #f59e0b;
+            color: white;
+            padding: 6px 11px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .result {
+            margin-top: 12px;
+            padding: 14px;
+            border-radius: 15px;
+            background: #ecfeff;
+            border: 1px solid #99f6e4;
+            color: #134e4a;
+            line-height: 1.5;
+        }
+        code {
+            background: #e2e8f0;
+            border-radius: 6px;
+            padding: 2px 5px;
+        }
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 31px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <header>
+        <h1>Calibrazione positiva alimenti</h1>
+        <p>
+            Crea impronte visive separate per latte, yogurt, pane e uova,
+            sia come prodotti reali sia come fotografie mostrate dal telefono.
+            Le classi COCO non richiedono calibrazione: usano il rilevamento nativo.
+        </p>
+    </header>
+
+    <div class="grid">
+        <section class="card">
+            <h2>1. Webcam e inquadratura</h2>
+            <div class="video-wrap">
+                <video id="video" autoplay muted playsinline></video>
+                <div class="guide"><span>Prodotto reale: usa il riquadro verde</span></div>
+                <div class="phone-inner-guide"><span>Foto dal telefono: riempi questa zona</span></div>
+            </div>
+            <div class="actions">
+                <button id="start-button" onclick="avvia()">Avvia calibrazione</button>
+                <button class="dark" onclick="testaOggetto()" id="test-button" disabled>Testa l’oggetto attuale</button>
+            </div>
+            <div id="status" class="status">Avvia la webcam e attendi il caricamento dei modelli.</div>
+            <div id="test-result" class="result" style="display:none"></div>
+        </section>
+
+        <section class="card">
+            <h2>2. Registra esempi positivi</h2>
+            <div id="classes" class="classes"></div>
+            <div class="hint">
+                Per ciascuna delle quattro classi Teachable Machine registra 8 campioni reali e 8 campioni da telefono.
+                Per la foto da telefono fai zoom e porta il contenuto dell’alimento
+                dentro il riquadro arancione, riducendo bordi, mani, volto e interfaccia.
+            </div>
+        </section>
+    </div>
+
+    <section class="card footer-card">
+        <h2>3. Genera il filtro open-set</h2>
+        <p>
+            Servono almeno 8 campioni reali e 8 campioni da telefono per latte, yogurt, pane e uova.
+            I due gruppi restano separati e non vengono più fusi in un unico prototipo.
+            Il file generato non sostituisce il modello Teachable Machine:
+            aggiunge soltanto il controllo “appartiene davvero alle classi note?”.
+        </p>
+        <div class="actions">
+            <button id="generate-button" onclick="generaCalibrazione()" disabled>
+                Genera food_prototypes.json
+            </button>
+            <button class="danger" onclick="azzeraCampioni()">Azzera campioni</button>
+        </div>
+        <div id="generate-result" class="status">
+            Il file andrà copiato dentro la cartella <code>food_model</code>.
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+<script>
+    const FOOD_MODEL_URL = "./food_model/model.json";
+    const FOOD_METADATA_URL = "./food_model/metadata.json";
+    const STORAGE_KEY = "smart_pantry_food_prototypes_v2";
+    const MIN_SAMPLES_PER_MODE = 8;
+    const CAPTURE_COUNT = 8;
+    const CAPTURE_DELAY_MS = 480;
+
+    let video;
+    let tmModel;
+    let embeddingBackbone;
+    let started = false;
+    let busy = false;
+    let currentConfig = null;
+
+    const classOrder = [
+        "latte", "yogurt", "pane", "uova"
+    ];
+
+    const classDisplayNames = {
+        "banana": "Banana",
+        "apple": "Mela",
+        "sandwich": "Sandwich",
+        "orange": "Arancia",
+        "broccoli": "Broccoli",
+        "carrot": "Carota",
+        "hot dog": "Hot dog",
+        "pizza": "Pizza",
+        "donut": "Donut",
+        "cake": "Torta",
+        "latte": "Latte",
+        "yogurt": "Yogurt",
+        "pane": "Pane",
+        "uova": "Uova"
+    };
+
+    const samples = Object.fromEntries(
+        classOrder.map(className => [className, { reale: [], telefono: [] }])
+    );
+
+    function classDomId(className) {
+        return String(className)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+    }
+
+    function classLabel(className) {
+        return classDisplayNames[className] || className;
+    }
+
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = 224;
+    cropCanvas.height = 224;
+    const cropCtx = cropCanvas.getContext("2d", { willReadFrequently: true });
+
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function setStatus(text) {
+        document.getElementById("status").textContent = text;
+    }
+
+    function normalizzaVettore(vettore) {
+        let sum = 0;
+        for (const value of vettore) {
+            const n = Number(value) || 0;
+            sum += n * n;
+        }
+        const norm = Math.sqrt(sum);
+        if (!Number.isFinite(norm) || norm <= 1e-12) {
+            return null;
+        }
+        return vettore.map(value => (Number(value) || 0) / norm);
+    }
+
+    function cosine(a, b) {
+        if (!a || !b || a.length !== b.length) {
+            return -1;
+        }
+        let value = 0;
+        for (let i = 0; i < a.length; i++) {
+            value += a[i] * b[i];
+        }
+        return value;
+    }
+
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    function percentile(values, p) {
+        if (!values.length) return 0;
+        const sorted = [...values].sort((a, b) => a - b);
+        const position = (sorted.length - 1) * p;
+        const lower = Math.floor(position);
+        const upper = Math.ceil(position);
+        if (lower === upper) return sorted[lower];
+        const weight = position - lower;
+        return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+    }
+
+    function meanPrototype(vectors) {
+        if (!vectors.length) return null;
+        const mean = new Array(vectors[0].length).fill(0);
+        for (const vector of vectors) {
+            for (let i = 0; i < vector.length; i++) {
+                mean[i] += vector[i];
+            }
+        }
+        for (let i = 0; i < mean.length; i++) {
+            mean[i] /= vectors.length;
+        }
+        return normalizzaVettore(mean);
+    }
+
+    function trovaModelloInterno(wrapper) {
+        const candidates = [wrapper && wrapper.model, wrapper && wrapper._model, wrapper];
+        for (const candidate of candidates) {
+            if (candidate && Array.isArray(candidate.layers) && candidate.layers.length) {
+                return candidate;
+            }
+        }
+        if (wrapper) {
+            for (const value of Object.values(wrapper)) {
+                if (value && Array.isArray(value.layers) && value.layers.length &&
+                    typeof value.predict === "function") {
+                    return value;
+                }
+            }
+        }
+        return null;
+    }
+
+    function initEmbeddingBackbone() {
+        const internal = trovaModelloInterno(tmModel);
+        if (!internal) {
+            throw new Error("Modello interno Teachable Machine non accessibile.");
+        }
+        embeddingBackbone = internal.layers.find(layer =>
+            layer && typeof layer.predict === "function" &&
+            Array.isArray(layer.layers) &&
+            layer.layers.some(inner =>
+                String(inner.name || "").toLowerCase().includes("global_average_pooling")
+            )
+        ) || internal.layers[0];
+
+        if (!embeddingBackbone || typeof embeddingBackbone.predict !== "function") {
+            throw new Error("Backbone visuale non disponibile.");
+        }
+    }
+
+    async function embeddingFromCanvas(canvas) {
+        let outputTensor = null;
+        try {
+            outputTensor = tf.tidy(() => {
+                const input = tf.browser.fromPixels(canvas)
+                    .toFloat()
+                    .div(127.5)
+                    .sub(1)
+                    .expandDims(0);
+                const output = embeddingBackbone.predict(input);
+                const tensor = Array.isArray(output) ? output[0] : output;
+                return tensor.squeeze().clone();
+            });
+            const values = Array.from(await outputTensor.data());
+            return normalizzaVettore(values);
+        } finally {
+            if (outputTensor) outputTensor.dispose();
+        }
+    }
+
+    function centralBox() {
+        const w = video.videoWidth * 0.58;
+        const h = video.videoHeight * 0.58;
+        return {
+            x: (video.videoWidth - w) / 2,
+            y: (video.videoHeight - h) / 2,
+            w, h
+        };
+    }
+
+    function scaledCentralBox(factor) {
+        const base = centralBox();
+        const w = base.w * factor;
+        const h = base.h * factor;
+        return {
+            x: base.x + (base.w - w) / 2,
+            y: base.y + (base.h - h) / 2,
+            w, h
+        };
+    }
+
+    async function cropCurrent(mode) {
+        /*
+            Reale: usiamo l'intero riquadro verde.
+            Telefono: usiamo solo la zona interna arancione, così bordi del
+            telefono, mani, volto e riflessi pesano molto meno dell'alimento.
+        */
+        const box = mode === "telefono"
+            ? scaledCentralBox(0.72)
+            : centralBox();
+
+        cropCtx.clearRect(0, 0, 224, 224);
+        cropCtx.drawImage(
+            video,
+            box.x, box.y, box.w, box.h,
+            0, 0, 224, 224
+        );
+
+        return {
+            canvas: cropCanvas,
+            usedPhone: mode === "telefono",
+            mode
+        };
+    }
+
+    function renderClasses() {
+        const container = document.getElementById("classes");
+        container.innerHTML = "";
+
+        for (const className of classOrder) {
+            const safeId = classDomId(className);
+            const card = document.createElement("div");
+            card.className = "class-card";
+            card.innerHTML = `
+                <div class="class-head">
+                    <div class="class-name">${classLabel(className)}</div>
+                    <div class="count" id="count-${safeId}">0 campioni</div>
+                </div>
+                <div class="class-actions">
+                    <button data-class="${className}" data-mode="reale" id="real-${safeId}" disabled>
+                        + 8 prodotto reale
+                    </button>
+                    <button class="secondary" data-class="${className}" data-mode="telefono" id="phone-${safeId}" disabled>
+                        + 8 foto dal telefono
+                    </button>
+                </div>
+            `;
+
+            card.querySelectorAll("button[data-class]").forEach(button => {
+                button.addEventListener("click", () => {
+                    captureSeries(button.dataset.class, button.dataset.mode);
+                });
+            });
+
+            container.appendChild(card);
+        }
+        updateCounts();
+    }
+
+    function updateCounts() {
+        for (const className of classOrder) {
+            const reale = samples[className].reale.length;
+            const telefono = samples[className].telefono.length;
+            document.getElementById(`count-${classDomId(className)}`).textContent =
+                `reale ${reale} · telefono ${telefono}`;
+        }
+        const ready = classOrder.every(name =>
+            samples[name].reale.length >= MIN_SAMPLES_PER_MODE &&
+            samples[name].telefono.length >= MIN_SAMPLES_PER_MODE
+        );
+        document.getElementById("generate-button").disabled = !ready || busy;
+    }
+
+    function setCaptureButtons(enabled) {
+        for (const className of classOrder) {
+            document.getElementById(`real-${classDomId(className)}`).disabled = !enabled;
+            document.getElementById(`phone-${classDomId(className)}`).disabled = !enabled;
+        }
+        document.getElementById("test-button").disabled = !enabled;
+        updateCounts();
+    }
+
+    async function avvia() {
+        if (started) return;
+        started = true;
+        document.getElementById("start-button").disabled = true;
+        setStatus("Avvio webcam e caricamento modelli…");
+
+        try {
+            await tf.setBackend("webgl").catch(() => {});
+            await tf.ready();
+
+            video = document.getElementById("video");
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
+            video.srcObject = stream;
+            await new Promise(resolve => video.onloadedmetadata = resolve);
+            await video.play();
+
+            tmModel = await tmImage.load(FOOD_MODEL_URL, FOOD_METADATA_URL);
+            initEmbeddingBackbone();
+
+            setCaptureButtons(true);
+            setStatus(
+                "Pronto. Registra ogni classe con prodotto reale e con foto sul telefono."
+            );
+        } catch (error) {
+            started = false;
+            document.getElementById("start-button").disabled = false;
+            setStatus("Errore: " + error.message);
+            console.error(error);
+        }
+    }
+
+    async function captureSeries(className, mode) {
+        if (!started || busy) return;
+        busy = true;
+        setCaptureButtons(false);
+
+        let captured = 0;
+        try {
+            for (let i = 0; i < CAPTURE_COUNT; i++) {
+                setStatus(
+                    `Acquisizione ${classLabel(className)} (${mode}): ${i + 1}/${CAPTURE_COUNT}. ` +
+                    (mode === "telefono"
+                        ? "Fai riempire la zona arancione dalla foto dell'alimento."
+                        : "Muovi lentamente il prodotto reale nel riquadro verde.")
+                );
+                const crop = await cropCurrent(mode);
+                const embedding = await embeddingFromCanvas(crop.canvas);
+                if (!embedding) {
+                    throw new Error("Embedding non disponibile.");
+                }
+                samples[className][mode].push(embedding);
+                captured++;
+                updateCounts();
+                await sleep(CAPTURE_DELAY_MS);
+            }
+            setStatus(
+                `${captured} nuovi campioni ${mode} registrati per ${classLabel(className)}.`
+            );
+        } catch (error) {
+            setStatus("Acquisizione interrotta: " + error.message);
+            console.error(error);
+        } finally {
+            busy = false;
+            setCaptureButtons(true);
+        }
+    }
+
+    function topKMean(values, k = 3) {
+        const valid = values
+            .filter(Number.isFinite)
+            .sort((a, b) => b - a)
+            .slice(0, Math.max(1, k));
+        if (!valid.length) return -1;
+        return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+    }
+
+    function exemplarScore(vector, exemplars, excludeIndex = -1) {
+        const similarities = exemplars
+            .map((item, index) => index === excludeIndex ? null : cosine(vector, item))
+            .filter(value => value !== null);
+        return topKMean(similarities, 3);
+    }
+
+    function buildModeConfig(className, mode) {
+        const exemplars = samples[className][mode]
+            .map(normalizzaVettore)
+            .filter(Boolean);
+
+        if (exemplars.length < MIN_SAMPLES_PER_MODE) {
+            throw new Error(
+                `Servono almeno ${MIN_SAMPLES_PER_MODE} campioni ${mode} per ${classLabel(className)}.`
+            );
+        }
+
+        const ownScores = exemplars.map((vector, index) =>
+            exemplarScore(vector, exemplars, index)
+        );
+
+        const margins = exemplars.map((vector, index) => {
+            const own = exemplarScore(vector, exemplars, index);
+            const bestOther = Math.max(...classOrder
+                .filter(name => name !== className)
+                .map(name => exemplarScore(vector, samples[name][mode]))
+            );
+            return own - bestOther;
+        });
+
+        const minThreshold = mode === "telefono" ? 0.78 : 0.72;
+        const minMargin = mode === "telefono" ? 0.030 : 0.018;
+
+        return {
+            exemplars,
+            prototype: meanPrototype(exemplars),
+            threshold: clamp(
+                percentile(ownScores, 0.10) - 0.012,
+                minThreshold,
+                0.96
+            ),
+            margin: clamp(
+                percentile(margins, 0.10) - 0.008,
+                minMargin,
+                0.18
+            ),
+            samples: exemplars.length,
+            minTrainingScore: Math.min(...ownScores),
+            medianTrainingScore: percentile(ownScores, 0.50)
+        };
+    }
+
+    function buildConfig() {
+        const classes = {};
+
+        for (const className of classOrder) {
+            classes[className] = {
+                modes: {
+                    reale: buildModeConfig(className, "reale"),
+                    telefono: buildModeConfig(className, "telefono")
+                }
+            };
+        }
+
+        return {
+            version: 2,
+            generatedAt: new Date().toISOString(),
+            method: "positive-exemplar-open-set-multimode",
+            embeddingSource: "teachable-machine-mobilenet-backbone",
+            phoneCropFactor: 0.72,
+            topK: 3,
+            classes
+        };
+    }
+
+    function downloadJSON(config) {
+        const blob = new Blob(
+            [JSON.stringify(config, null, 2)],
+            { type: "application/json" }
+        );
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "food_prototypes.json";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    async function generaCalibrazione() {
+        if (busy) return;
+        try {
+            currentConfig = buildConfig();
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(currentConfig)
+            );
+            downloadJSON(currentConfig);
+
+            const summary = classOrder.map(name => {
+                const real = currentConfig.classes[name].modes.reale;
+                const phone = currentConfig.classes[name].modes.telefono;
+                return `${classLabel(name)}: reale ${real.threshold.toFixed(3)}/${real.margin.toFixed(3)}, ` +
+                    `telefono ${phone.threshold.toFixed(3)}/${phone.margin.toFixed(3)}`;
+            }).join(" · ");
+
+            document.getElementById("generate-result").innerHTML =
+                `<strong>Calibrazione generata e salvata nel browser.</strong><br>` +
+                `È stato scaricato <code>food_prototypes.json</code>: copialo nella cartella <code>food_model</code>.<br>` +
+                summary;
+            setStatus("Calibrazione completata. Ora puoi testare alimenti e oggetti estranei.");
+        } catch (error) {
+            document.getElementById("generate-result").textContent =
+                "Errore: " + error.message;
+            console.error(error);
+        }
+    }
+
+    function scoreClassMode(embedding, className, mode, config) {
+        const modeConfig = config.classes[className].modes[mode];
+        return exemplarScore(embedding, modeConfig.exemplars);
+    }
+
+    function evaluateEmbedding(embedding, mode, config) {
+        const ranked = classOrder.map(name => ({
+            name,
+            mode,
+            score: scoreClassMode(embedding, name, mode, config)
+        })).sort((a, b) => b.score - a.score);
+
+        const best = ranked[0];
+        const second = ranked[1];
+        const settings = config.classes[best.name].modes[mode];
+        const margin = best.score - second.score;
+
+        return {
+            ...best,
+            second,
+            margin,
+            threshold: settings.threshold,
+            minMargin: settings.margin,
+            accepted: best.score >= settings.threshold && margin >= settings.margin
+        };
+    }
+
+    async function testaOggetto() {
+        if (!started || busy) return;
+        busy = true;
+        setCaptureButtons(false);
+        const resultBox = document.getElementById("test-result");
+        resultBox.style.display = "block";
+        resultBox.textContent = "Test interno in corso…";
+
+        try {
+            const config = currentConfig ||
+                JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+            if (!config || config.version !== 2 || !config.classes) {
+                throw new Error("Genera prima la nuova calibrazione v2.");
+            }
+
+            const realCrop = await cropCurrent("reale");
+            const phoneCrop = await cropCurrent("telefono");
+            const realEmbedding = await embeddingFromCanvas(realCrop.canvas);
+            const phoneEmbedding = await embeddingFromCanvas(phoneCrop.canvas);
+
+            const candidates = [
+                evaluateEmbedding(realEmbedding, "reale", config),
+                evaluateEmbedding(phoneEmbedding, "telefono", config)
+            ].sort((a, b) => b.score - a.score);
+
+            const best = candidates[0];
+            resultBox.innerHTML = best.accepted
+                ? `<strong>Classe conosciuta: ${classLabel(best.name)}</strong><br>` +
+                  `Modalità ${best.mode} · punteggio ${best.score.toFixed(3)} · margine ${best.margin.toFixed(3)}`
+                : `<strong>Oggetto non presente tra gli alimenti disponibili</strong><br>` +
+                  `Più vicino: ${classLabel(best.name)} (${best.mode}) · punteggio ${best.score.toFixed(3)} · margine ${best.margin.toFixed(3)}`;
+        } catch (error) {
+            resultBox.textContent = "Errore test: " + error.message;
+            console.error(error);
+        } finally {
+            busy = false;
+            setCaptureButtons(true);
+        }
+    }
+
+    function azzeraCampioni() {
+        if (busy) return;
+        for (const name of classOrder) {
+            samples[name] = { reale: [], telefono: [] };
+        }
+        currentConfig = null;
+        localStorage.removeItem(STORAGE_KEY);
+        updateCounts();
+        document.getElementById("generate-result").innerHTML =
+            `Campioni azzerati. Il file andrà copiato dentro la cartella <code>food_model</code>.`;
+        setStatus("Campioni azzerati.");
+    }
+
+    renderClasses();
+</script>
+</body>
+</html>
