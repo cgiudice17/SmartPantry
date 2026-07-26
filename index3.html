@@ -879,58 +879,31 @@
         }
 
         .footer-note-block {
-            padding: 18px 20px;
+            padding: 17px 19px;
             border-radius: 20px;
-            background: rgba(239, 246, 255, 0.94);
-            border: 1px solid rgba(147, 197, 253, 0.72);
-            color: #334155;
+            background: rgba(15, 23, 42, 0.67);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #dbeafe;
             font-size: 12px;
-            line-height: 1.58;
-            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.10);
-            transition:
-                transform 0.20s ease,
-                background 0.20s ease,
-                border-color 0.20s ease,
-                box-shadow 0.20s ease;
-        }
-
-        .footer-note-block:hover {
-            transform: translateY(-3px);
-            background: rgba(224, 242, 254, 0.98);
-            border-color: rgba(56, 189, 248, 0.82);
-            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.14);
+            line-height: 1.55;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.13);
         }
 
         .footer-note-block strong {
             display: block;
-            margin-bottom: 7px;
-            color: #0f4c81;
+            margin-bottom: 6px;
+            color: #ffffff;
             font-size: 13px;
-            transition: color 0.20s ease;
-        }
-
-        .footer-note-block:hover strong {
-            color: #0369a1;
         }
 
         .footer-note-block.medical {
-            background: rgba(255, 247, 237, 0.96);
-            border-color: rgba(253, 186, 116, 0.72);
-            color: #57534e;
-        }
-
-        .footer-note-block.medical strong {
-            color: #9a3412;
-        }
-
-        .footer-note-block.medical:hover {
-            background: rgba(255, 237, 213, 0.99);
-            border-color: rgba(251, 146, 60, 0.86);
-            box-shadow: 0 16px 30px rgba(124, 45, 18, 0.14);
-        }
-
-        .footer-note-block.medical:hover strong {
-            color: #c2410c;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(120, 53, 15, 0.78),
+                    rgba(153, 27, 27, 0.68)
+                );
+            border-color: rgba(253, 186, 116, 0.34);
         }
 
         @media (max-width: 980px) {
@@ -1311,7 +1284,9 @@
         <footer class="footer-note">
             <div class="footer-note-block">
                 <strong>Nota sull’affidabilità</strong>
-                Il sistema di visione artificiale individua la categoria dell'alimento in base a forma e aspetto, ma la classificazione visiva può commettere errori scambiando prodotti di forma simile. Verificare sempre che la tipologia di alimento riconosciuta corrisponda al prodotto reale e controllare l'etichetta sulla confezione prima di affidarsi a consigli sugli allergeni.
+                Smart Pantry Tutor supporta una valutazione iniziale, ma non sostituisce
+                la lettura dell’etichetta: ingredienti e allergeni possono variare
+                tra marche, ricette e confezioni.
             </div>
 
             <div class="footer-note-block medical">
@@ -4918,13 +4893,23 @@
             );
 
             /*
-                Regola rigida per evitare falsi riconoscimenti del volto:
-                se BlazeFace rileva un volto dentro il riquadro verde,
-                Teachable Machine non può registrare latte, uova, pane o yogurt.
-                Tutte le altre soglie e la logica di riconoscimento restano invariate.
+                Il volto blocca Teachable Machine soltanto quando entra davvero
+                nel riquadro e non è presente un supporto prodotto nello stesso
+                riquadro. Un bicchiere lontano non può più sbloccare il controllo.
             */
+            const candidatoCustomMoltoForte = Boolean(
+                customValidato &&
+                customValidato.confidence >= 0.74 &&
+                customValidato.margin >= 0.085 &&
+                Number(customValidato.cropAgreement || 0) >= 2 &&
+                variazionePresente &&
+                differenzaDalloSfondo >= 0.045
+            );
+
             const voltoBloccaTeachable = Boolean(
-                statoVoltoAlimento.presenteNelRiquadro
+                statoVoltoAlimento.presenteNelRiquadro &&
+                !supportoProdottoRilevato &&
+                !candidatoCustomMoltoForte
             );
 
             if (voltoBloccaTeachable) {
