@@ -287,6 +287,109 @@
             box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);
         }
 
+        .food-correction-area {
+            margin-top: 12px;
+        }
+
+        .food-correction-area[hidden],
+        .food-correction-panel[hidden] {
+            display: none;
+        }
+
+        .food-correction-toggle {
+            width: 100%;
+            margin: 0;
+            padding: 10px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+            background: #f8fafc;
+            color: #334155;
+            box-shadow: none;
+            font-size: 12px;
+        }
+
+        .food-correction-toggle:hover {
+            border-color: #64748b;
+            background: #f1f5f9;
+            box-shadow: 0 7px 15px rgba(51, 65, 85, 0.10);
+        }
+
+        .food-correction-panel {
+            margin-top: 9px;
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 15px;
+            background: #f8fafc;
+            text-align: left;
+        }
+
+        .food-correction-panel label {
+            display: block;
+            margin-bottom: 7px;
+            color: #334155;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .food-correction-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #94a3b8;
+            border-radius: 11px;
+            background: #ffffff;
+            color: #0f172a;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .food-correction-select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .food-correction-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .food-correction-confirm,
+        .food-correction-cancel {
+            flex: 1;
+            margin: 0;
+            padding: 9px 10px;
+            border-radius: 11px;
+            font-size: 11px;
+            box-shadow: none;
+        }
+
+        .food-correction-confirm {
+            background: linear-gradient(135deg, var(--blue), #1d4ed8);
+        }
+
+        .food-correction-cancel {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+        }
+
+        .food-correction-cancel:hover {
+            background: #f1f5f9;
+            box-shadow: none;
+        }
+
+        .manual-correction-note {
+            display: inline-block;
+            margin-top: 7px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
         .allergen-alert {
             margin-top: 12px;
             padding: 13px;
@@ -889,6 +992,47 @@
                     <button id="food-action-button" class="food-reset-button" onclick="resetAlimento()" disabled>
                         Prima riconosci l’utente
                     </button>
+
+
+                    <div id="food-correction-area" class="food-correction-area" hidden>
+                        <button
+                            id="food-correction-toggle"
+                            class="food-correction-toggle"
+                            type="button"
+                            onclick="toggleCorrezioneAlimento()"
+                        >
+                            L’alimento riconosciuto è sbagliato?
+                        </button>
+
+                        <div id="food-correction-panel" class="food-correction-panel" hidden>
+                            <label for="food-correction-select">
+                                Seleziona l’alimento corretto
+                            </label>
+
+                            <select
+                                id="food-correction-select"
+                                class="food-correction-select"
+                            ></select>
+
+                            <div class="food-correction-actions">
+                                <button
+                                    class="food-correction-confirm"
+                                    type="button"
+                                    onclick="confermaCorrezioneAlimento()"
+                                >
+                                    Conferma
+                                </button>
+
+                                <button
+                                    class="food-correction-cancel"
+                                    type="button"
+                                    onclick="annullaCorrezioneAlimento()"
+                                >
+                                    Annulla
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="result-box database">
@@ -1280,16 +1424,16 @@
             quindi abbassata, mantenendo la conferma su più fotogrammi.
         */
         const SOGLIA_INTERNA_COCO = 0.32;
-        const SOGLIA_INTERNA_TM = 0.56;
-        const MARGINE_INTERNO_TM = 0.07;
+        const SOGLIA_INTERNA_TM = 0.54;
+        const MARGINE_INTERNO_TM = 0.045;
         const EVIDENZE_MINIME_COCO = 2;
-        const EVIDENZE_MINIME_TM = 3;
+        const EVIDENZE_MINIME_TM = 2;
         const SOGLIA_PERSONA_DOMINANTE = 0.88;
 
         /*
             Controlli contro il falso riconoscimento della faccia come uova.
         */
-        const DIFFERENZA_MINIMA_NUOVO_OGGETTO = 0.035;
+        const DIFFERENZA_MINIMA_NUOVO_OGGETTO = 0.055;
         const SOGLIA_VOLTO_SU_RIQUADRO = 0.22;
         const SOGLIA_VOLTO_INTERNO = 0.65;
         const DURATA_CACHE_VOLTO_ALIMENTO = 700;
@@ -1426,6 +1570,160 @@
             return foodDisplayName[alimento] || alimento;
         }
 
+
+        function elencoAlimentiCorreggibili() {
+            return [...new Set([...foodClasses, ...customFoodClasses])];
+        }
+
+        function inizializzaCorrezioneAlimento() {
+            const select = document.getElementById("food-correction-select");
+
+            if (!select) {
+                return;
+            }
+
+            select.innerHTML = "";
+
+            elencoAlimentiCorreggibili()
+                .sort(function(a, b) {
+                    return nomeAlimento(a).localeCompare(
+                        nomeAlimento(b),
+                        "it"
+                    );
+                })
+                .forEach(function(alimento) {
+                    const option = document.createElement("option");
+                    option.value = alimento;
+                    option.textContent = nomeAlimento(alimento);
+                    select.appendChild(option);
+                });
+        }
+
+        function aggiornaCorrezioneAlimento(disponibile) {
+            const area = document.getElementById("food-correction-area");
+            const pannello = document.getElementById("food-correction-panel");
+            const select = document.getElementById("food-correction-select");
+
+            if (!area || !pannello) {
+                return;
+            }
+
+            const attiva = Boolean(
+                disponibile &&
+                alimentoBloccato &&
+                ultimoAlimentoRilevato !== ""
+            );
+
+            area.hidden = !attiva;
+            pannello.hidden = true;
+
+            if (attiva && select) {
+                select.value = ultimoAlimentoRilevato;
+            }
+        }
+
+        function toggleCorrezioneAlimento() {
+            const pannello = document.getElementById("food-correction-panel");
+            const select = document.getElementById("food-correction-select");
+
+            if (
+                !pannello ||
+                !alimentoBloccato ||
+                ultimoAlimentoRilevato === ""
+            ) {
+                return;
+            }
+
+            pannello.hidden = !pannello.hidden;
+
+            if (!pannello.hidden && select) {
+                select.value = ultimoAlimentoRilevato;
+                select.focus();
+            }
+        }
+
+        function annullaCorrezioneAlimento() {
+            const pannello = document.getElementById("food-correction-panel");
+            const select = document.getElementById("food-correction-select");
+
+            if (pannello) {
+                pannello.hidden = true;
+            }
+
+            if (select && ultimoAlimentoRilevato) {
+                select.value = ultimoAlimentoRilevato;
+            }
+        }
+
+        async function confermaCorrezioneAlimento() {
+            const select = document.getElementById("food-correction-select");
+
+            if (
+                !select ||
+                !alimentoBloccato ||
+                ultimoAlimentoRilevato === ""
+            ) {
+                return;
+            }
+
+            const alimentoCorretto = String(select.value || "").trim();
+
+            if (!elencoAlimentiCorreggibili().includes(alimentoCorretto)) {
+                return;
+            }
+
+            const alimentoPrecedente = ultimoAlimentoRilevato;
+            ultimoAlimentoRilevato = alimentoCorretto;
+            ultimaConfidenzaAlimento = 1;
+
+            if (alimentoVisibileTemporaneo) {
+                alimentoVisibileTemporaneo.className = alimentoCorretto;
+                alimentoVisibileTemporaneo.confidence = 1;
+                alimentoVisibileTemporaneo.source = "manuale";
+            }
+
+            if (ultimoBoxAlimento) {
+                disegnaRettangolo(
+                    ultimoBoxAlimento,
+                    nomeAlimento(alimentoCorretto),
+                    "#2563eb"
+                );
+            }
+
+            document.getElementById("risultato-alimento").innerHTML =
+                "<div class='food-detected'>" +
+                "Alimento selezionato: " +
+                escapeHTML(nomeAlimento(alimentoCorretto)) +
+                "<br><span class='manual-correction-note'>Corretto manualmente</span>" +
+                (
+                    alimentoPrecedente !== alimentoCorretto
+                        ? "<br><span class='small-text'>Il riconoscimento automatico aveva indicato " +
+                          escapeHTML(nomeAlimento(alimentoPrecedente)) +
+                          ". Da questo momento viene utilizzato l’alimento corretto.</span>"
+                        : "<br><span class='small-text'>La selezione è stata confermata.</span>"
+                ) +
+                "<div class='allergen-alert'>" +
+                escapeHTML(
+                    allergenInfo[alimentoCorretto] ||
+                    "Informazioni allergeni non disponibili."
+                ) +
+                "</div></div>";
+
+            annullaCorrezioneAlimento();
+            aggiornaCorrezioneAlimento(true);
+            aggiornaAzioniContestuali();
+
+            if (alimentoPrecedente !== alimentoCorretto) {
+                aggiungiMessaggioSistema(
+                    "Correzione applicata: da ora considero " +
+                    nomeAlimento(alimentoCorretto) +
+                    " come alimento selezionato."
+                );
+            }
+
+            await controllaCompatibilitaAutomatica();
+        }
+
         function creaElencoAlimentiSupportati() {
             return (
                 "<div class='supported-foods-panel'>" +
@@ -1481,6 +1779,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             inizializzaMenuRapido();
+            inizializzaCorrezioneAlimento();
             aggiornaBadgeSessione();
         });
 
@@ -1882,7 +2181,15 @@
                 );
                 maxCustomFoodPredictions = customFoodModel.getTotalClasses();
 
-                foodPrototypeStatus = "disattivato";
+                /*
+                    Questa versione non usa food_prototypes.json.
+                    Le quattro classi personalizzate vengono controllate con:
+                    più ritagli, confidenza, margine, variazione rispetto allo
+                    sfondo e conferma su più fotogrammi.
+                */
+                foodPrototypeStatus = "non-usato";
+                foodPrototypeConfig = null;
+                customFoodEmbeddingBackbone = null;
 
                 const modelliGenerali = await Promise.all([
                     cocoSsd.load(),
@@ -1896,7 +2203,8 @@
 
                 document.getElementById("risultato-alimento").innerHTML =
                     "Riconoscimento alimento bloccato" +
-                    "<br><span class='small-text'>Prima fai riconoscere l’utente; poi potrai analizzare il prodotto senza calibrazione aggiuntiva.</span>";
+                    "<br><span class='small-text'>Prima fai riconoscere l’utente; poi potrai analizzare il prodotto.</span>" +
+                    "<br><span class='small-text'>Controllo attivo senza file di prototipi: più ritagli, margine, variazione dello sfondo e conferma temporale.</span>";
 
             } catch (error) {
 
@@ -2761,6 +3069,60 @@
             };
         }
 
+        async function validaCandidatoCustomConPrototipi(
+            candidato,
+            immagini
+        ) {
+            if (
+                !candidato ||
+                !customFoodClasses.includes(candidato.className)
+            ) {
+                return null;
+            }
+
+            /*
+                food_prototypes.json non viene usato.
+                Accettiamo una classe personalizzata soltanto quando la stessa
+                classe prevale su più ritagli ed è abbastanza separata dalla
+                seconda. Un picco molto alto può passare anche con due ritagli.
+            */
+            const accordo = Number(candidato.cropAgreement || 0);
+            const confidenza = Number(candidato.confidence || 0);
+            const margine = Number(candidato.margin || 0);
+
+            const passaggioNormale = Boolean(
+                accordo >= 2 &&
+                confidenza >= 0.60 &&
+                margine >= 0.055
+            );
+
+            const passaggioMoltoForte = Boolean(
+                accordo >= 2 &&
+                confidenza >= 0.78 &&
+                margine >= 0.10
+            );
+
+            if (!passaggioNormale && !passaggioMoltoForte) {
+                console.log("TM rifiutato dal controllo multi-ritaglio:", {
+                    classe: candidato.className,
+                    confidenza,
+                    margine,
+                    accordo
+                });
+                return null;
+            }
+
+            return {
+                ...candidato,
+                prototypeSimilarity: 0,
+                prototypeMargin: 0,
+                prototypeNearestClass: "",
+                prototypeMode: "senza-prototipi",
+                prototypeThreshold: 0,
+                prototypeMarginMin: 0
+            };
+        }
+
         function trovaBoxSchermoTelefono(
             predictions,
             boxOrigine,
@@ -3508,6 +3870,7 @@
             document.getElementById("risultato-database").innerHTML =
                 "In attesa di utente e alimento";
 
+            aggiornaCorrezioneAlimento(false);
             aggiornaAzioniContestuali();
             avviaNuovaConversazione(false);
 
@@ -4015,19 +4378,15 @@
                 return null;
             }
 
-            if (!coco) {
-                return teachable;
-            }
-
-            if (!teachable) {
-                return coco;
-            }
-
             /*
-                Alcune forme vengono confuse spesso da COCO. In questi casi
-                il classificatore personalizzato può prevalere se è stabile.
+                Una classe alimentare COCO confermata mantiene la priorità.
+                L'unica eccezione resta il caso delle uova, quando il modello
+                personalizzato è molto stabile e COCO le confonde con forme
+                visivamente simili.
             */
             if (
+                coco &&
+                teachable &&
                 teachable.className === "uova" &&
                 ["orange", "cake", "donut"].includes(coco.className) &&
                 teachable.confidenzaMedia >= 0.86
@@ -4035,19 +4394,23 @@
                 return teachable;
             }
 
-            /*
-                Una classe alimentare COCO confermata su più frame prevale sul
-                veto generico. Il veto resta utile quando COCO non vede alcun
-                alimento e Teachable Machine tenta di forzare una delle sue
-                quattro classi.
-            */
             if (coco) {
                 return coco;
             }
 
-            if (vetoNonAlimentare) {
+            /*
+                Prima il codice restituiva subito Teachable Machine e quindi
+                ignorava il veto quando non era presente una classe COCO.
+                Ora un volto o un oggetto estraneo confermato annulla il
+                risultato personalizzato.
+            */
+            if (
+                teachable &&
+                vetoNonAlimentare &&
+                teachable.confidenzaMedia < 0.72
+            ) {
                 console.log(
-                    "Oggetto rifiutato dal veto generale:",
+                    "Classe personalizzata debole rifiutata dal veto generale:",
                     vetoNonAlimentare
                 );
                 return null;
@@ -4120,6 +4483,7 @@
                 analisiAlimentoCorrente = null;
                 azzeraCandidatoAlimento();
                 ultimoSegnaleCoco = null;
+                aggiornaCorrezioneAlimento(false);
                 aggiornaAzioniContestuali();
                 return;
             }
@@ -4160,8 +4524,30 @@
             analisiAlimentoCorrente = null;
             azzeraCandidatoAlimento();
             ultimoSegnaleCoco = null;
+            aggiornaCorrezioneAlimento(true);
             aggiornaAzioniContestuali();
             controllaCompatibilitaAutomatica();
+        }
+
+        function boxSufficientementeNelRiquadro(
+            boxOggetto,
+            boxRiquadro,
+            quotaMinima = 0.18
+        ) {
+            if (!boxOggetto || !boxRiquadro) {
+                return false;
+            }
+
+            const areaOggetto = Math.max(
+                boxOggetto.w * boxOggetto.h,
+                1
+            );
+            const intersezione = areaIntersezioneBox(
+                boxOggetto,
+                boxRiquadro
+            );
+
+            return intersezione / areaOggetto >= quotaMinima;
         }
 
         async function predictFood() {
@@ -4350,13 +4736,20 @@
                     immagineSchermo ? [immagineSchermo] : []
                 );
 
+            const candidatoCustomForte = Boolean(
+                miglioreCustom &&
+                miglioreCustom.confidence >= 0.64 &&
+                miglioreCustom.margin >= 0.06 &&
+                Number(miglioreCustom.cropAgreement || 0) >= 2
+            );
+
             /*
-                Un rilevamento alimentare COCO positivo non deve essere
-                annullato da MobileNet o da una categoria non alimentare
-                generica. Il veto viene cercato soltanto se COCO non ha trovato
-                nessuna delle classi alimentari supportate nel frame.
+                Se Teachable Machine vede in modo coerente uno dei quattro
+                alimenti personalizzati, non lasciamo che una classificazione
+                generica dell'intera stanza lo annulli. I veto restano attivi
+                soltanto quando non esiste già un candidato alimentare forte.
             */
-            const vetoCoco = miglioreCoco
+            const vetoCoco = (miglioreCoco || candidatoCustomForte)
                 ? null
                 : trovaVetoNonAlimentareCoco(
                     predictionsCocoComplete,
@@ -4369,6 +4762,7 @@
 
             if (
                 !miglioreCoco &&
+                !candidatoCustomForte &&
                 analisiAlimentoCorrente.frameTotali % 2 === 0
             ) {
                 vetoMobileNet =
@@ -4425,17 +4819,16 @@
                 customFoodClasses.includes(
                     miglioreCustom.className
                 ) &&
-                !vetoNonAlimentare
+                (!vetoNonAlimentare || candidatoCustomForte)
             ) {
-                customValidato = {
-                    ...miglioreCustom,
-                    prototypeSimilarity: 0,
-                    prototypeMargin: 0,
-                    prototypeNearestClass: "",
-                    prototypeMode: "multi-crop",
-                    prototypeThreshold: 0,
-                    prototypeMarginMin: 0
-                };
+                customValidato =
+                    await validaCandidatoCustomConPrototipi(
+                        miglioreCustom,
+                        [
+                            immagineSchermo,
+                            ritagliAnalisi.teachable
+                        ]
+                    );
             }
 
             analisiAlimentoCorrente.frameTotali++;
@@ -4456,27 +4849,67 @@
                     boxAnalisi
                 );
 
-            const supportoProdottoRilevato = Boolean(
-                boxTelefono ||
+            const telefonoNelRiquadro = Boolean(
+                boxTelefono &&
+                boxSufficientementeNelRiquadro(
+                    boxTelefono,
+                    boxAnalisi,
+                    0.18
+                )
+            );
+
+            const contenitoreNelRiquadro =
                 predictionsCocoComplete.some(function(prediction) {
                     const nome = String(
                         prediction.class || ""
                     ).toLowerCase();
+                    const bbox = Array.isArray(prediction.bbox)
+                        ? prediction.bbox
+                        : null;
 
-                    return (
-                        [
-                            "bottle",
-                            "cup",
-                            "bowl"
-                        ].includes(nome) &&
-                        prediction.score >= 0.28
+                    if (
+                        !bbox ||
+                        !["bottle", "cup", "bowl"].includes(nome) ||
+                        prediction.score < 0.28
+                    ) {
+                        return false;
+                    }
+
+                    return boxSufficientementeNelRiquadro(
+                        {
+                            x: bbox[0],
+                            y: bbox[1],
+                            w: bbox[2],
+                            h: bbox[3]
+                        },
+                        boxAnalisi,
+                        0.22
                     );
-                })
+                });
+
+            const supportoProdottoRilevato = Boolean(
+                telefonoNelRiquadro ||
+                contenitoreNelRiquadro
+            );
+
+            /*
+                Il volto blocca Teachable Machine soltanto quando entra davvero
+                nel riquadro e non è presente un supporto prodotto nello stesso
+                riquadro. Un bicchiere lontano non può più sbloccare il controllo.
+            */
+            const candidatoCustomMoltoForte = Boolean(
+                customValidato &&
+                customValidato.confidence >= 0.74 &&
+                customValidato.margin >= 0.085 &&
+                Number(customValidato.cropAgreement || 0) >= 2 &&
+                variazionePresente &&
+                differenzaDalloSfondo >= 0.045
             );
 
             const voltoBloccaTeachable = Boolean(
                 statoVoltoAlimento.presenteNelRiquadro &&
-                !supportoProdottoRilevato
+                !supportoProdottoRilevato &&
+                !candidatoCustomMoltoForte
             );
 
             if (voltoBloccaTeachable) {
@@ -4619,6 +5052,7 @@
             analisiAlimentoCorrente = creaNuovaAnalisiAlimento();
             riconoscimentoAlimentoAttivo = true;
             mostraGuidaAlimento(true);
+            aggiornaCorrezioneAlimento(false);
 
             document.getElementById("risultato-database").innerHTML =
                 "Utente: " +
