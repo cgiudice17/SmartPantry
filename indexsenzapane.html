@@ -881,25 +881,24 @@
         .footer-note-block {
             padding: 18px 20px;
             border-radius: 20px;
-            background: rgba(239, 246, 255, 0.96);
-            border: 1px solid rgba(186, 230, 253, 0.95);
+            background: rgba(239, 246, 255, 0.94);
+            border: 1px solid rgba(147, 197, 253, 0.72);
             color: #334155;
             font-size: 12px;
             line-height: 1.58;
-            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.09);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.10);
             transition:
                 transform 0.20s ease,
                 background 0.20s ease,
                 border-color 0.20s ease,
-                box-shadow 0.20s ease,
-                color 0.20s ease;
+                box-shadow 0.20s ease;
         }
 
         .footer-note-block:hover {
-            transform: translateY(-4px);
-            background: rgba(224, 242, 254, 0.99);
-            border-color: rgba(125, 211, 252, 0.98);
-            box-shadow: 0 16px 30px rgba(14, 116, 144, 0.14);
+            transform: translateY(-3px);
+            background: rgba(224, 242, 254, 0.98);
+            border-color: rgba(56, 189, 248, 0.82);
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.14);
         }
 
         .footer-note-block strong {
@@ -915,23 +914,23 @@
         }
 
         .footer-note-block.medical {
-            background: rgba(255, 244, 240, 0.97);
-            border-color: rgba(253, 205, 197, 0.96);
-            color: #5f4a45;
+            background: rgba(255, 247, 237, 0.96);
+            border-color: rgba(253, 186, 116, 0.72);
+            color: #57534e;
         }
 
         .footer-note-block.medical strong {
-            color: #b4533d;
+            color: #9a3412;
         }
 
         .footer-note-block.medical:hover {
-            background: rgba(255, 236, 230, 0.99);
-            border-color: rgba(251, 182, 170, 0.98);
-            box-shadow: 0 16px 30px rgba(180, 83, 61, 0.13);
+            background: rgba(255, 237, 213, 0.99);
+            border-color: rgba(251, 146, 60, 0.86);
+            box-shadow: 0 16px 30px rgba(124, 45, 18, 0.14);
         }
 
         .footer-note-block.medical:hover strong {
-            color: #c96a52;
+            color: #c2410c;
         }
 
         @media (max-width: 980px) {
@@ -1022,8 +1021,45 @@
                     </button>
 
 
-                    
+                    <div id="food-correction-area" class="food-correction-area" hidden>
+                        <button
+                            id="food-correction-toggle"
+                            class="food-correction-toggle"
+                            type="button"
+                            onclick="toggleCorrezioneAlimento()"
+                        >
+                            L’alimento riconosciuto è sbagliato?
+                        </button>
 
+                        <div id="food-correction-panel" class="food-correction-panel" hidden>
+                            <label for="food-correction-select">
+                                Seleziona l’alimento corretto
+                            </label>
+
+                            <select
+                                id="food-correction-select"
+                                class="food-correction-select"
+                            ></select>
+
+                            <div class="food-correction-actions">
+                                <button
+                                    class="food-correction-confirm"
+                                    type="button"
+                                    onclick="confermaCorrezioneAlimento()"
+                                >
+                                    Conferma
+                                </button>
+
+                                <button
+                                    class="food-correction-cancel"
+                                    type="button"
+                                    onclick="annullaCorrezioneAlimento()"
+                                >
+                                    Annulla
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="result-box database">
@@ -1413,16 +1449,16 @@
             quindi abbassata, mantenendo la conferma su più fotogrammi.
         */
         const SOGLIA_INTERNA_COCO = 0.32;
-        const SOGLIA_INTERNA_TM = 0.56;
-        const MARGINE_INTERNO_TM = 0.07;
+        const SOGLIA_INTERNA_TM = 0.54;
+        const MARGINE_INTERNO_TM = 0.045;
         const EVIDENZE_MINIME_COCO = 2;
-        const EVIDENZE_MINIME_TM = 3;
+        const EVIDENZE_MINIME_TM = 2;
         const SOGLIA_PERSONA_DOMINANTE = 0.88;
 
         /*
             Controlli contro il falso riconoscimento della faccia come uova.
         */
-        const DIFFERENZA_MINIMA_NUOVO_OGGETTO = 0.035;
+        const DIFFERENZA_MINIMA_NUOVO_OGGETTO = 0.055;
         const SOGLIA_VOLTO_SU_RIQUADRO = 0.22;
         const SOGLIA_VOLTO_INTERNO = 0.65;
         const DURATA_CACHE_VOLTO_ALIMENTO = 700;
@@ -1499,25 +1535,9 @@
             "chair", "armchair", "sofa", "couch", "bed",
             "toilet", "washing machine", "printer", "clock",
             "table lamp", "desk lamp", "shoe", "sneaker",
-            "running shoe", "loafer", "sandal", "slipper", "clog",
-            "boot", "sock", "stocking", "dishrag", "rag", "towel",
-            "bath towel", "handkerchief", "doormat", "cloth",
             "backpack", "suitcase", "umbrella", "car", "truck",
             "bus", "motorcycle", "bicycle", "dog", "cat", "bird"
         ];
-
-        /*
-            Questi termini rappresentano oggetti chiaramente non alimentari
-            che possono avere colore o consistenza simili al pane. Restano
-            sempre un veto forte, anche quando Teachable Machine propone pane.
-        */
-        const TERMINI_VETO_FORTE_PANE = [
-            "shoe", "sneaker", "running shoe", "loafer", "sandal",
-            "slipper", "clog", "boot", "sock", "stocking",
-            "dishrag", "rag", "towel", "bath towel", "handkerchief",
-            "doormat", "cloth"
-        ];
-        const SOGLIA_VETO_GENERICO_QUANDO_PANE = 0.38;
 
         let analisiAlimentoCorrente = null;
 
@@ -3461,28 +3481,8 @@
                             continue;
                         }
 
-                        const vetoFortePerPane =
-                            TERMINI_VETO_FORTE_PANE.some(
-                                termine => lower.includes(termine)
-                            );
-
-                        /*
-                            Il pane veniva talvolta scartato da una categoria
-                            generica di MobileNet con probabilità bassa. Quando
-                            TM propone pane, un veto generico deve essere molto
-                            più convincente; scarpe e tessili, invece, restano
-                            sempre bloccati con la soglia normale.
-                        */
-                        const sogliaVeto = Boolean(
-                            candidatoTm &&
-                            candidatoTm.className === "pane" &&
-                            !vetoFortePerPane
-                        )
-                            ? SOGLIA_VETO_GENERICO_QUANDO_PANE
-                            : SOGLIA_VETO_MOBILENET;
-
                         if (
-                            score >= sogliaVeto &&
+                            score >= SOGLIA_VETO_MOBILENET &&
                             etichettaMobileNetDaBloccare(etichetta)
                         ) {
                             candidati.push({
@@ -3490,7 +3490,7 @@
                                 score,
                                 bbox: [0, 0, 1, 1],
                                 areaRelativa: 1,
-                                forte: vetoFortePerPane,
+                                forte: true,
                                 source: "mobilenet"
                             });
                         }
@@ -4403,19 +4403,15 @@
                 return null;
             }
 
-            if (!coco) {
-                return teachable;
-            }
-
-            if (!teachable) {
-                return coco;
-            }
-
             /*
-                Alcune forme vengono confuse spesso da COCO. In questi casi
-                il classificatore personalizzato può prevalere se è stabile.
+                Una classe alimentare COCO confermata mantiene la priorità.
+                L'unica eccezione resta il caso delle uova, quando il modello
+                personalizzato è molto stabile e COCO le confonde con forme
+                visivamente simili.
             */
             if (
+                coco &&
+                teachable &&
                 teachable.className === "uova" &&
                 ["orange", "cake", "donut"].includes(coco.className) &&
                 teachable.confidenzaMedia >= 0.86
@@ -4423,19 +4419,23 @@
                 return teachable;
             }
 
-            /*
-                Una classe alimentare COCO confermata su più frame prevale sul
-                veto generico. Il veto resta utile quando COCO non vede alcun
-                alimento e Teachable Machine tenta di forzare una delle sue
-                quattro classi.
-            */
             if (coco) {
                 return coco;
             }
 
-            if (vetoNonAlimentare) {
+            /*
+                Prima il codice restituiva subito Teachable Machine e quindi
+                ignorava il veto quando non era presente una classe COCO.
+                Ora un volto o un oggetto estraneo confermato annulla il
+                risultato personalizzato.
+            */
+            if (
+                teachable &&
+                vetoNonAlimentare &&
+                teachable.confidenzaMedia < 0.72
+            ) {
                 console.log(
-                    "Oggetto rifiutato dal veto generale:",
+                    "Classe personalizzata debole rifiutata dal veto generale:",
                     vetoNonAlimentare
                 );
                 return null;
@@ -4761,13 +4761,20 @@
                     immagineSchermo ? [immagineSchermo] : []
                 );
 
+            const candidatoCustomForte = Boolean(
+                miglioreCustom &&
+                miglioreCustom.confidence >= 0.64 &&
+                miglioreCustom.margin >= 0.06 &&
+                Number(miglioreCustom.cropAgreement || 0) >= 2
+            );
+
             /*
-                Un rilevamento alimentare COCO positivo non deve essere
-                annullato da MobileNet o da una categoria non alimentare
-                generica. Il veto viene cercato soltanto se COCO non ha trovato
-                nessuna delle classi alimentari supportate nel frame.
+                Se Teachable Machine vede in modo coerente uno dei quattro
+                alimenti personalizzati, non lasciamo che una classificazione
+                generica dell'intera stanza lo annulli. I veto restano attivi
+                soltanto quando non esiste già un candidato alimentare forte.
             */
-            const vetoCoco = miglioreCoco
+            const vetoCoco = (miglioreCoco || candidatoCustomForte)
                 ? null
                 : trovaVetoNonAlimentareCoco(
                     predictionsCocoComplete,
@@ -4780,6 +4787,7 @@
 
             if (
                 !miglioreCoco &&
+                !candidatoCustomForte &&
                 analisiAlimentoCorrente.frameTotali % 2 === 0
             ) {
                 vetoMobileNet =
@@ -4836,17 +4844,16 @@
                 customFoodClasses.includes(
                     miglioreCustom.className
                 ) &&
-                !vetoNonAlimentare
+                (!vetoNonAlimentare || candidatoCustomForte)
             ) {
-                customValidato = {
-                    ...miglioreCustom,
-                    prototypeSimilarity: 0,
-                    prototypeMargin: 0,
-                    prototypeNearestClass: "",
-                    prototypeMode: "multi-crop",
-                    prototypeThreshold: 0,
-                    prototypeMarginMin: 0
-                };
+                customValidato =
+                    await validaCandidatoCustomConPrototipi(
+                        miglioreCustom,
+                        [
+                            immagineSchermo,
+                            ritagliAnalisi.teachable
+                        ]
+                    );
             }
 
             analisiAlimentoCorrente.frameTotali++;
@@ -4867,27 +4874,57 @@
                     boxAnalisi
                 );
 
-            const supportoProdottoRilevato = Boolean(
-                boxTelefono ||
+            const telefonoNelRiquadro = Boolean(
+                boxTelefono &&
+                boxSufficientementeNelRiquadro(
+                    boxTelefono,
+                    boxAnalisi,
+                    0.18
+                )
+            );
+
+            const contenitoreNelRiquadro =
                 predictionsCocoComplete.some(function(prediction) {
                     const nome = String(
                         prediction.class || ""
                     ).toLowerCase();
+                    const bbox = Array.isArray(prediction.bbox)
+                        ? prediction.bbox
+                        : null;
 
-                    return (
-                        [
-                            "bottle",
-                            "cup",
-                            "bowl"
-                        ].includes(nome) &&
-                        prediction.score >= 0.28
+                    if (
+                        !bbox ||
+                        !["bottle", "cup", "bowl"].includes(nome) ||
+                        prediction.score < 0.28
+                    ) {
+                        return false;
+                    }
+
+                    return boxSufficientementeNelRiquadro(
+                        {
+                            x: bbox[0],
+                            y: bbox[1],
+                            w: bbox[2],
+                            h: bbox[3]
+                        },
+                        boxAnalisi,
+                        0.22
                     );
-                })
+                });
+
+            const supportoProdottoRilevato = Boolean(
+                telefonoNelRiquadro ||
+                contenitoreNelRiquadro
             );
 
+            /*
+                Regola rigida per evitare falsi riconoscimenti del volto:
+                se BlazeFace rileva un volto dentro il riquadro verde,
+                Teachable Machine non può registrare latte, uova, pane o yogurt.
+                Tutte le altre soglie e la logica di riconoscimento restano invariate.
+            */
             const voltoBloccaTeachable = Boolean(
-                statoVoltoAlimento.presenteNelRiquadro &&
-                !supportoProdottoRilevato
+                statoVoltoAlimento.presenteNelRiquadro
             );
 
             if (voltoBloccaTeachable) {
